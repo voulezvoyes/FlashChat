@@ -1,587 +1,794 @@
 <!doctype html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FlashChat - Crew Leader</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Archivo:wght@600;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Archivo:wght@500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+body{margin:0;background:#0B0B0A;font-family:'Noto Sans KR','Apple SD Gothic Neo',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+.leaflet-container{background:#12120F}
+.leaflet-tile-pane{filter:saturate(.5) brightness(.9) contrast(1.08)}
+.leaflet-control-zoom{display:none}
+.scr { }
+@media (max-width:480px){
+  body > div:first-child { width:100vw !important; }
+}
+</style>
 </head>
 <body>
+<div style="width:390px;margin:0 auto;position:relative;min-height:100vh;background:#0B0B0A;overflow:hidden">
+    <div id="6a" style="flex:none;display:flex;flex-direction:column;gap:16px;scroll-margin-top:20px">
+      <div style="box-sizing:border-box;position:relative;width:390px;height:844px;background:#0B0B0A;border:10px solid #000;border-radius:52px;overflow:hidden;box-shadow:0 30px 70px -20px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.06);flex:none">
+        <div id="mu3-map-host" style="position:absolute;inset:0;z-index:0;background:#12120F"></div>
 
-<div id="routeGate">
-  <div class="wrap" style="padding-top:60px;">
-    <div class="center-text">
-      <div class="big-emoji">⚡</div>
-      <h1>Where's today's run?</h1>
-      <div class="sub">Set this first — your crew will see the correct route the moment they scan the QR</div>
+        <div class="scr" id="scr-hSetup" style="display:none">
+        <div style="position:absolute;inset:0;z-index:2;background:#0B0B0A;display:flex;flex-direction:column">
+          <div style="position:absolute;inset:0 0 auto;height:404px;overflow:hidden">
+            <img src="assets/run/6.avif" alt="함께 달리는 크루" style="width:100%;height:100%;object-fit:cover;object-position:50% 30%;opacity:.66;filter:grayscale(.3) contrast(1.05)">
+            <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,10,.55) 0%,rgba(11,11,10,.12) 30%,rgba(11,11,10,.92) 80%,#0B0B0A 100%)"></div>
+          </div>
+          <div style="position:relative;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font:600 13px/1 'Archivo',sans-serif;color:#F4F3EE"><span>9:41</span><span style="display:flex;align-items:center;gap:6px"><span style="width:16px;height:8px;background:#F4F3EE;border-radius:1px"></span><span style="width:23px;height:11px;border:1.5px solid rgba(244,243,238,.8);border-radius:3px"></span></span></div>
+          <div style="position:relative;display:flex;align-items:center;justify-content:space-between;padding:6px 20px 0">
+            <span style="font:600 13px/1 'Oswald',sans-serif;letter-spacing:.22em;color:#F4F3EE">MICRO USC</span>
+            <span style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.14em;padding:4px 7px;background:#E8FF00;color:#0B0B0A;border-radius:3px">HOST</span>
+          </div>
+          <div style="position:relative;margin-top:96px;padding:0 20px">
+            <div style="font:600 11px/1 'Oswald',sans-serif;letter-spacing:.2em;color:#E8FF00">BUILD THE RUN · STEP 01</div>
+            <h1 style="margin:12px 0 0;font:600 37px/.95 'Oswald',sans-serif;text-transform:uppercase;color:#F4F3EE">NOBODY<br>RUNS ALONE.</h1>
+            <p style="margin:11px 0 0;font:400 12.5px/1.55 'Noto Sans KR',sans-serif;color:#A9A99E;max-width:295px">코스를 고르면 오늘의 러닝이 만들어져요. 크루는 QR 한 번으로 합류합니다.</p>
+          </div>
+          <div style="position:relative;flex:1;margin-top:20px;padding:0 20px 4px;display:flex;flex-direction:column;gap:11px;overflow-y:auto">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.18em;color:#8A8A80">PICK YOUR COURSE</span><span style="font:500 10.5px/1 'Noto Sans KR',sans-serif;color:#5F5F58">탭하면 상세가 열려요</span></div>
+            <div style="display:flex;gap:9px">
+              <button id="btn-usc" class="pill-toggle" onclick="pickUsc()" style="flex:1;padding:15px 14px;border:1px solid rgba(244,243,238,.18);border-radius:6px;background:transparent;color:#8A8A80;text-align:left;cursor:pointer"><div style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.16em;opacity:.7">PRESET · ONE WAY</div><div style="margin-top:9px;font:800 28px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums">5.0<span style="font:600 12px/1 'Oswald',sans-serif;letter-spacing:.1em"> KM</span></div><div style="margin-top:6px;font:500 11px/1.3 'Noto Sans KR',sans-serif;opacity:.7">USC → Exposition</div></button>
+              <button id="btn-hwd" class="pill-toggle" onclick="pickHwd()" style="flex:1;padding:15px 14px;border:1px solid rgba(244,243,238,.18);border-radius:6px;background:transparent;color:#8A8A80;text-align:left;cursor:pointer"><div style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.16em;opacity:.7">PRESET · LOOP</div><div style="margin-top:9px;font:800 28px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums">10.0<span style="font:600 12px/1 'Oswald',sans-serif;letter-spacing:.1em"> KM</span></div><div style="margin-top:6px;font:500 11px/1.3 'Noto Sans KR',sans-serif;opacity:.7">USC – Hollywood</div></button>
+            </div>
+
+            <div class="scr" id="scr-noPreset" style="display:none">
+            <div style="margin-top:4px;padding:22px 18px;border:1px dashed rgba(244,243,238,.16);border-radius:6px;text-align:center">
+              <div style="font:600 10px/1 'Oswald',sans-serif;letter-spacing:.16em;color:#5F5F58">NO COURSE SELECTED</div>
+              <div style="margin-top:10px;font:500 12.5px/1.6 'Noto Sans KR',sans-serif;color:#6E6E66">코스를 선택하면 거리, 예상 시간, 집결지,<br>목표 페이스 옵션이 여기에 열려요.</div>
+            </div>
+            </div>
+
+            <div class="scr" id="scr-hasPreset" style="display:none">
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;border-radius:6px;overflow:hidden">
+                <div style="padding:12px;background:rgba(232,255,0,.1)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#C9D400">DISTANCE</div><div style="margin-top:7px;font:700 18px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#F4F3EE"><span id="v-presetKm">-</span></div></div>
+                <div style="padding:12px;background:rgba(244,243,238,.06)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">EST. TIME</div><div style="margin-top:7px;font:700 18px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#F4F3EE"><span id="v-presetTime">-</span></div></div>
+                <div style="padding:12px;background:rgba(244,243,238,.06)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">CAP</div><div style="margin-top:7px;font:700 18px/1 'Archivo',sans-serif;color:#F4F3EE">10</div></div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:1px;border-radius:6px;overflow:hidden">
+                <div style="display:flex;align-items:center;justify-content:space-between;height:50px;padding:0 15px;background:rgba(244,243,238,.06)"><span style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">MEET</span><span style="font:500 13.5px/1 'Noto Sans KR',sans-serif;color:#F4F3EE"><span id="v-presetMeet">-</span></span></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;height:50px;padding:0 15px;background:rgba(244,243,238,.06)"><span style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">FINISH</span><span style="font:500 13.5px/1 'Noto Sans KR',sans-serif;color:#F4F3EE"><span id="v-presetFinish">-</span></span></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;height:50px;padding:0 15px;background:rgba(244,243,238,.06)"><span style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">ROOM</span><span style="font:500 13.5px/1 'Noto Sans KR',sans-serif;color:#F4F3EE">화요일 저녁 러닝</span></div>
+              </div>
+              <div>
+                <div style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.18em;color:#8A8A80">TARGET PACE <span style="color:#5F5F58">· 선택</span></div>
+                <div style="display:flex;gap:7px;margin-top:10px">
+                  <button id="btn-g0" class="pill-toggle" onclick="pace0()" style="flex:1;height:42px;border:1px solid rgba(244,243,238,.18);border-radius:5px;background:transparent;color:#8A8A80;font:700 12px/1 'Archivo',sans-serif;cursor:pointer">FREE</button>
+                  <button id="btn-g5" class="pill-toggle" onclick="pace5()" style="flex:1;height:42px;border:1px solid rgba(244,243,238,.18);border-radius:5px;background:transparent;color:#8A8A80;font:700 12px/1 'Archivo',sans-serif;cursor:pointer">5:30</button>
+                  <button id="btn-g6" class="pill-toggle" onclick="pace6()" style="flex:1;height:42px;border:1px solid rgba(244,243,238,.18);border-radius:5px;background:transparent;color:#8A8A80;font:700 12px/1 'Archivo',sans-serif;cursor:pointer">6:00</button>
+                  <button id="btn-g7" class="pill-toggle" onclick="pace7()" style="flex:1;height:42px;border:1px solid rgba(244,243,238,.18);border-radius:5px;background:transparent;color:#8A8A80;font:700 12px/1 'Archivo',sans-serif;cursor:pointer">7:00</button>
+                </div>
+              </div>
+              <button onclick="toggleSim()" style="display:flex;align-items:center;justify-content:space-between;padding:14px 15px;border:1px solid rgba(244,243,238,.12);border-radius:6px;background:transparent;cursor:pointer;text-align:left">
+                <span><span style="display:block;font:600 12.5px/1 'Noto Sans KR',sans-serif;color:#F4F3EE">TEST RUNNERS 추가</span><span style="display:block;margin-top:5px;font:400 11px/1.3 'Noto Sans KR',sans-serif;color:#6E6E66">가상 러너 9명으로 리허설해요</span></span>
+                <span id="sim-toggle-track" style="flex:none;width:46px;height:26px;border-radius:13px;background:rgba(244,243,238,.14);position:relative;transition:background 180ms"><span id="sim-toggle-knob" style="position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:10px;background:#fff;transition:left 180ms"></span></span>
+              </button>
+            </div>
+            </div>
+          </div>
+          <div style="position:relative;padding:14px 20px calc(18px + 26px)">
+            <button id="btn-cta" onclick="goLobby()" style="width:100%;height:60px;border:none;border-radius:6px;background:rgba(244,243,238,.1);color:#6E6E66;font:600 15px/1 'Oswald',sans-serif;letter-spacing:.16em;cursor:pointer;opacity:.6" style-active="transform:translateY(2px)"><span id="v-ctaLabel">-</span></button>
+          </div>
+          <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:10px;width:132px;height:5px;border-radius:3px;background:rgba(244,243,238,.5)"></div>
+        </div>
+        </div>
+
+        <div class="scr" id="scr-hLobby" style="display:none">
+        <div style="position:absolute;inset:0;z-index:2;background:#0B0B0A;display:flex;flex-direction:column">
+          <div style="position:absolute;inset:0 0 auto;height:250px;overflow:hidden">
+            <img src="assets/run/13.avif" alt="" aria-hidden="true" style="width:100%;height:100%;object-fit:cover;opacity:.4;filter:grayscale(.5)">
+            <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,10,.55),#0B0B0A 90%)"></div>
+          </div>
+          <div style="position:relative;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font:600 13px/1 'Archivo',sans-serif;color:#F4F3EE"><span>9:41</span><span style="width:23px;height:11px;border:1.5px solid rgba(244,243,238,.8);border-radius:3px"></span></div>
+          <div style="position:relative;display:flex;align-items:center;justify-content:space-between;padding:6px 16px 0">
+            <button onclick="goSetup()" aria-label="뒤로" style="width:40px;height:40px;border:1px solid rgba(244,243,238,.18);border-radius:20px;background:transparent;color:#F4F3EE;font:400 16px/1 sans-serif;cursor:pointer">←</button>
+            <span style="font:600 11px/1 'Oswald',sans-serif;letter-spacing:.2em;color:#8A8A80">GATHER THE CREW · STEP 02</span>
+            <span style="width:40px"></span>
+          </div>
+          <div style="position:relative;padding:20px 20px 0;display:flex;align-items:flex-end;justify-content:space-between">
+            <div>
+              <div style="font:600 11px/1 'Oswald',sans-serif;letter-spacing:.18em;color:#E8FF00">ONE SCAN AWAY</div>
+              <div style="margin-top:10px;font:700 24px/1.25 'Noto Sans KR',sans-serif;color:#F4F3EE">크루가 모이고 있어요</div>
+            </div>
+            <div style="text-align:right"><div style="font:800 32px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#F4F3EE"><span id="v-joined">-</span><span style="color:#5F5F58">/10</span></div><div style="margin-top:4px;font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.16em;color:#8A8A80">RUNNERS IN</div></div>
+          </div>
+          <div style="position:relative;margin:18px 20px 0;padding:20px;border-radius:8px;background:#F4F3EE;display:flex;gap:18px;align-items:center">
+            <div id="mu3-qr-target" style="flex:none;width:108px;height:108px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.18em;color:#6E6E66">ROOM CODE</div>
+              <div style="margin-top:8px;font:800 21px/1 'Archivo',sans-serif;letter-spacing:.05em;color:#0B0B0A"><span id="v-roomCode">-</span></div>
+              <div style="margin-top:7px;font:500 10.5px/1.4 'Noto Sans KR',sans-serif;color:#6E6E66"><span id="v-joinUrlShort">-</span></div>
+              <div style="display:flex;gap:6px;margin-top:12px">
+                <button onclick="copyLink()" style="flex:1;height:36px;border:1px solid rgba(11,11,10,.18);border-radius:5px;background:transparent;font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer"><span id="v-copyLabel">-</span></button>
+                <button style="flex:1;height:36px;border:none;border-radius:5px;background:#0B0B0A;color:#E8FF00;font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">SHARE QR</button>
+              </div>
+            </div>
+          </div>
+          <div style="position:relative;flex:1;padding:20px 20px 0;overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.18em;color:#8A8A80"><span>WHO'S IN</span><span style="color:#5F5F58">아바타를 탭하면 준비 상태</span></div>
+            <div style="display:flex;gap:8px;margin-top:13px">
+              <div id="lobbyCrewList"></div>
+              <span style="width:50px;height:50px;border-radius:25px;border:1px dashed rgba(244,243,238,.28);display:flex;align-items:center;justify-content:center;font:600 12px/1 'Archivo',sans-serif;color:#8A8A80">+3</span>
+            </div>
+            <div class="scr" id="scr-lobbyPicked" style="display:none">
+            <div style="margin-top:16px;padding:15px 16px;border-radius:6px;background:rgba(244,243,238,.06);border-left:2px solid #E8FF00">
+              <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:700 14px/1 'Noto Sans KR',sans-serif;color:#F4F3EE"><span id="v-pickName">-</span></span><span id="pick-state-color" style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.12em;color:#E8FF00"><span id="v-pickState">-</span></span></div>
+              <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;justify-content:space-between;font:500 11.5px/1 'Noto Sans KR',sans-serif;color:#A9A99E">위치 권한<span id="pick-loc-color" style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.1em;color:#4ADE80"><span id="v-pickLoc">-</span></span></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;font:500 11.5px/1 'Noto Sans KR',sans-serif;color:#A9A99E">알림음 테스트<span id="pick-snd-color" style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.1em;color:#4ADE80"><span id="v-pickSnd">-</span></span></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;font:500 11.5px/1 'Noto Sans KR',sans-serif;color:#A9A99E">입장 시각<span style="font:600 10px/1 'Archivo',sans-serif;color:#F4F3EE"><span id="v-pickTime">-</span></span></div>
+              </div>
+            </div>
+            </div>
+            <div class="scr" id="scr-lobbyIdle" style="display:none">
+            <div style="margin-top:16px;padding:15px 16px;border-radius:6px;background:rgba(232,255,0,.07);border-left:2px solid #E8FF00;font:500 12px/1.5 'Noto Sans KR',sans-serif;color:#D6D6CB">6명 준비 완료 · 완두콩이 위치 권한을 기다리는 중이에요. 지금 시작해도 늦게 합류할 수 있어요.</div>
+            </div>
+          </div>
+          <div style="position:relative;padding:14px 20px calc(18px + 26px)">
+            <button onclick="goLive()" style="width:100%;height:60px;border:none;border-radius:6px;background:#E8FF00;color:#0B0B0A;font:600 15px/1 'Oswald',sans-serif;letter-spacing:.16em;cursor:pointer" style-active="transform:translateY(2px)">START · GO TOGETHER</button>
+          </div>
+          <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:10px;width:132px;height:5px;border-radius:3px;background:rgba(244,243,238,.5)"></div>
+        </div>
+        </div>
+
+        <div class="scr" id="scr-hLive" style="display:none">
+        <div style="position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;pointer-events:none">
+          <div style="position:relative;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font:600 13px/1 'Archivo',sans-serif;color:#F4F3EE;background:linear-gradient(180deg,rgba(11,11,10,.8),transparent)"><span>9:41</span><span style="width:23px;height:11px;border:1.5px solid rgba(244,243,238,.8);border-radius:3px"></span></div>
+          <div style="position:relative;display:flex;align-items:center;justify-content:space-between;padding:2px 14px 0;pointer-events:auto">
+            <div style="display:flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:22px;background:rgba(11,11,10,.74);backdrop-filter:blur(18px);border:1px solid rgba(244,243,238,.12)">
+              <span style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;padding:3px 5px;background:#E8FF00;color:#0B0B0A;border-radius:2px">HOST</span>
+              <span style="font:700 13px/1 'Noto Sans KR',sans-serif;color:#F4F3EE">화요일 저녁 러닝</span>
+              <span style="font:700 12px/1 'Archivo',sans-serif;color:#8A8A80">7</span>
+            </div>
+            <button onclick="openMenu()" aria-label="호스트 메뉴" style="width:44px;height:44px;border:1px solid rgba(244,243,238,.12);border-radius:22px;background:rgba(11,11,10,.74);backdrop-filter:blur(18px);color:#F4F3EE;font:600 15px/1 sans-serif;cursor:pointer">⋯</button>
+          </div>
+          <div style="position:relative;margin:10px 14px 0;display:flex;gap:7px;pointer-events:auto">
+            <button id="btn-tabAlerts" class="pill-toggle" onclick="tabAlerts()" style="flex:1;height:38px;border:1px solid rgba(244,243,238,.18);border-radius:5px;background:transparent;color:#8A8A80;font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">ALERTS · <span id="v-openAlerts">-</span></button>
+            <button id="btn-tabRoster" class="pill-toggle" onclick="tabRoster()" style="flex:1;height:38px;border:1px solid rgba(244,243,238,.18);border-radius:5px;background:transparent;color:#8A8A80;font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">ROSTER · 7</button>
+          </div>
+          <div style="flex:1"></div>
+          <div style="position:relative;background:#0B0B0A;border-radius:22px 22px 0 0;border-top:1px solid rgba(244,243,238,.1);padding:10px 20px 0;pointer-events:auto;box-shadow:0 -20px 50px rgba(0,0,0,.6)">
+            <div onclick="toggleHostSheet()" style="width:40px;height:4px;border-radius:2px;background:rgba(244,243,238,.28);margin:0 auto 14px;cursor:pointer"></div>
+            <div style="display:flex;align-items:flex-end;justify-content:space-between">
+              <div>
+                <div style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.18em;color:#8A8A80">PACK STATUS · 40/40/20</div>
+                <div style="margin-top:10px;display:flex;align-items:center;gap:14px">
+                  <span style="display:flex;align-items:center;gap:6px;font:700 16px/1 'Archivo',sans-serif;color:#F4F3EE"><span style="width:8px;height:8px;border-radius:50%;background:#4ADE80"></span>4</span>
+                  <span style="display:flex;align-items:center;gap:6px;font:700 16px/1 'Archivo',sans-serif;color:#F4F3EE"><span style="color:#E8FF00;font-size:11px">▲</span>2</span>
+                  <span style="display:flex;align-items:center;gap:6px;font:700 16px/1 'Archivo',sans-serif;color:#F4F3EE"><span style="width:8px;height:8px;background:#FF3B3B"></span>1</span>
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.18em;color:#8A8A80">ELAPSED</div>
+                <div style="margin-top:8px;font:800 22px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#E8FF00"><span id="v-elapsed">-</span></div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:16px;border-radius:6px;overflow:hidden">
+              <div style="padding:12px"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">CREW PACE</div><div style="margin-top:7px;font:700 18px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#F4F3EE">5:46</div><div style="margin-top:5px;font:600 9px/1 'Oswald',sans-serif;letter-spacing:.1em;color:#E8FF00">목표 +0:16</div></div>
+              <div style="padding:12px;background:rgba(244,243,238,.06)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">SPREAD</div><div style="margin-top:7px;font:700 18px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#F4F3EE">820<span style="font-size:11px;color:#8A8A80"> m</span></div><div style="margin-top:5px;font:600 9px/1 'Oswald',sans-serif;letter-spacing:.1em;color:#8A8A80">선두–후미</div></div>
+              <div style="padding:12px;background:rgba(244,243,238,.06)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">COURSE</div><div style="margin-top:7px;font:700 18px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#F4F3EE"><span id="v-progress">-</span><span style="font-size:11px;color:#8A8A80"> %</span></div><div style="margin-top:5px;font:600 9px/1 'Oswald',sans-serif;letter-spacing:.1em;color:#8A8A80">1 완주</div></div>
+            </div>
+
+            <div id="host-sheet-panel" style="height:176px;overflow:hidden;transition:height 260ms cubic-bezier(.22,1,.36,1);margin-top:16px">
+              <div class="scr" id="scr-isAlerts" style="display:none">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <button onclick="openAlert()" style="all:unset;cursor:pointer;display:block;padding:14px 15px;border-radius:6px;background:rgba(255,59,59,.14);border-left:2px solid #FF3B3B">
+                  <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.16em;color:#FF3B3B">URGENT · HELP</span><span style="font:700 11px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#FF3B3B"><span id="v-alertClock">-</span></span></div>
+                  <div style="margin-top:8px;font:700 15px/1.35 'Noto Sans KR',sans-serif;color:#F4F3EE">완두콩이 도움을 요청했어요</div>
+                  <div style="margin-top:6px;font:500 11px/1 'Noto Sans KR',sans-serif;color:#A9A99E;font-variant-numeric:tabular-nums">2.1 km 지점 · 전달 6 · 확인 2 · 미해결</div>
+                </button>
+                <div style="padding:13px 15px;border-radius:6px;background:rgba(232,255,0,.08);border-left:2px solid #E8FF00">
+                  <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.16em;color:#C9D400">NOTICE · SPREAD</span><span style="font:700 11px/1 'Archivo',sans-serif;color:#8A8A80">01:12</span></div>
+                  <div style="margin-top:7px;font:500 12.5px/1.45 'Noto Sans KR',sans-serif;color:#F4F3EE">고구마가 그룹에서 420 m 뒤에 있어요.</div>
+                </div>
+                <div style="padding:13px 15px;border-radius:6px;background:rgba(127,212,255,.08);border-left:2px solid #7FD4FF">
+                  <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.16em;color:#7FD4FF">NOTICE · WATER</span><span style="font:700 11px/1 'Archivo',sans-serif;color:#8A8A80">03:40</span></div>
+                  <div style="margin-top:7px;font:500 12.5px/1.45 'Noto Sans KR',sans-serif;color:#F4F3EE">감자가 물이 필요해요 · 3.8 km 지점</div>
+                </div>
+                <div style="padding:12px 15px;border-radius:6px;background:rgba(244,243,238,.05);font:500 11.5px/1.5 'Noto Sans KR',sans-serif;color:#8A8A80">AMBIENT · 호박이 오늘 러닝을 마쳤어요 (GiveUp) · 07:12</div>
+              </div>
+              </div>
+              <div class="scr" id="scr-isRoster" style="display:none">
+              <div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.16em;color:#8A8A80"><span>RUNNER</span><span style="color:#5F5F58">행을 탭하면 상세</span></div>
+                <div id="rosterList"></div>
+              </div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:7px;padding:14px 0 calc(16px + 26px)">
+              <button onclick="toggleHostSheet()" style="flex:1;height:44px;border:1px solid rgba(244,243,238,.18);border-radius:4px;background:transparent;color:#F4F3EE;font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer"><span id="v-sheetLabel">-</span></button>
+              <button onclick="goSim()" style="flex:1;height:44px;border:1px solid rgba(244,243,238,.18);border-radius:4px;background:transparent;color:#F4F3EE;font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">SIM PANEL</button>
+              <button onclick="openEnd()" style="flex:1;height:44px;border:none;border-radius:4px;background:#FF3B3B;color:#fff;font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">END RUN</button>
+            </div>
+          </div>
+          <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:10px;width:132px;height:5px;border-radius:3px;background:rgba(244,243,238,.5)"></div>
+        </div>
+        </div>
+
+        <div class="scr" id="scr-hSim" style="display:none">
+        <div style="position:absolute;inset:0;z-index:4;background:#0B0B0A;display:flex;flex-direction:column">
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(-45deg,rgba(232,255,0,.028) 0 24px,transparent 24px 48px)"></div>
+          <div style="position:absolute;left:-30px;right:-30px;top:330px;text-align:center;font:600 46px/1 'Oswald',sans-serif;letter-spacing:.2em;color:rgba(232,255,0,.07);transform:rotate(-13deg);pointer-events:none">TEST SESSION</div>
+          <div style="position:relative;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font:600 13px/1 'Archivo',sans-serif;color:#F4F3EE"><span>9:41</span><span style="width:23px;height:11px;border:1.5px solid rgba(244,243,238,.8);border-radius:3px"></span></div>
+          <div style="position:relative;display:flex;align-items:center;justify-content:space-between;padding:6px 16px 0">
+            <button onclick="goLive()" aria-label="뒤로" style="width:40px;height:40px;border:1px solid rgba(244,243,238,.18);border-radius:20px;background:transparent;color:#F4F3EE;font:400 16px/1 sans-serif;cursor:pointer">←</button>
+            <span style="font:600 11px/1 'Oswald',sans-serif;letter-spacing:.2em;color:#8A8A80">SIMULATOR · HOST ONLY</span>
+            <span style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;padding:4px 6px;background:#E8FF00;color:#0B0B0A;border-radius:2px">TEST</span>
+          </div>
+          <div style="position:relative;flex:1;padding:22px 20px 0;overflow:hidden">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between">
+              <div><div style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.18em;color:#8A8A80">VIRTUAL RUNNERS</div><div style="margin-top:9px;font:800 34px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#F4F3EE"><span id="v-simCount">-</span><span style="font:600 12px/1 'Oswald',sans-serif;color:#5F5F58"> / 9</span></div></div>
+              <div style="display:flex;gap:7px"><button onclick="simMinus()" aria-label="러너 감소" style="width:44px;height:44px;border:1px solid rgba(244,243,238,.18);border-radius:5px;background:transparent;color:#F4F3EE;font:600 18px/1 sans-serif;cursor:pointer">−</button><button onclick="simPlus()" aria-label="러너 증가" style="width:44px;height:44px;border:1px solid rgba(244,243,238,.18);border-radius:5px;background:transparent;color:#F4F3EE;font:600 18px/1 sans-serif;cursor:pointer">+</button></div>
+            </div>
+            <div style="margin-top:22px;font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.18em;color:#8A8A80">PROFILE <span style="color:#5F5F58">· 탭해서 시나리오 조합</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">
+              <div id="simProfilesList"></div>
+            </div>
+            <div class="scr" id="scr-simHasPick" style="display:none">
+            <div style="margin-top:18px;padding:15px 16px;border-radius:6px;background:rgba(244,243,238,.06);border-left:2px solid #E8FF00">
+              <div style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#E8FF00"><span id="v-simPickLabel">-</span></div>
+              <div style="margin-top:9px;font:500 12px/1.6 'Noto Sans KR',sans-serif;color:#D6D6CB"><span id="v-simPickDesc">-</span></div>
+            </div>
+            </div>
+            <div class="scr" id="scr-simNoPick" style="display:none">
+            <div style="margin-top:18px;padding:18px 16px;border:1px dashed rgba(244,243,238,.16);border-radius:6px;font:500 12px/1.6 'Noto Sans KR',sans-serif;color:#6E6E66">프로필을 선택하면 검증 목적과 기대 결과가 여기에 나타나요.</div>
+            </div>
+            <div style="margin-top:20px;display:flex;gap:8px">
+              <div style="flex:1;padding:13px 14px;border-radius:6px;background:rgba(244,243,238,.06)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">GROUP A</div><div style="margin-top:7px;font:700 17px/1 'Archivo',sans-serif;color:#F4F3EE">10 m/s</div></div>
+              <div style="flex:1;padding:13px 14px;border-radius:6px;background:rgba(244,243,238,.06)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">GROUP B</div><div style="margin-top:7px;font:700 17px/1 'Archivo',sans-serif;color:#F4F3EE">50 m/s</div></div>
+              <div style="flex:1;padding:13px 14px;border-radius:6px;background:rgba(244,243,238,.06)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">SPEED</div><div style="margin-top:7px;font:700 17px/1 'Archivo',sans-serif;color:#E8FF00">×4</div></div>
+            </div>
+            <div style="margin-top:18px;padding:13px 15px;border-radius:6px;background:rgba(232,255,0,.07);font:500 11.5px/1.6 'Noto Sans KR',sans-serif;color:#D6D6CB">가상 참가자는 실제 슬롯을 사용하고 리스트·지도에 <b style="color:#E8FF00">SIM</b> 배지가 붙어요. Winner 집계에서는 제외됩니다.</div>
+          </div>
+          <div style="position:relative;padding:14px 20px calc(18px + 26px);display:flex;gap:8px">
+            <button style="flex:none;width:56px;height:54px;border:1px solid rgba(244,243,238,.18);border-radius:6px;background:transparent;color:#F4F3EE;font:600 9.5px/1 'Oswald',sans-serif;cursor:pointer">RESET</button>
+            <button style="flex:none;width:56px;height:54px;border:1px solid rgba(244,243,238,.18);border-radius:6px;background:transparent;color:#F4F3EE;font:600 13px/1 sans-serif;cursor:pointer">❙❙</button>
+            <button onclick="goLive()" style="flex:1;height:54px;border:none;border-radius:6px;background:#E8FF00;color:#0B0B0A;font:600 12px/1 'Oswald',sans-serif;letter-spacing:.14em;cursor:pointer">RUN SIMULATION</button>
+          </div>
+          <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:10px;width:132px;height:5px;border-radius:3px;background:rgba(244,243,238,.5)"></div>
+        </div>
+        </div>
+
+        <div class="scr" id="scr-hWatch" style="display:none">
+        <div style="position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;pointer-events:none">
+          <div style="position:relative;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font:600 13px/1 'Archivo',sans-serif;color:#F4F3EE;background:linear-gradient(180deg,rgba(11,11,10,.8),transparent)"><span>9:41</span><span style="width:23px;height:11px;border:1.5px solid rgba(244,243,238,.8);border-radius:3px"></span></div>
+          <div style="position:relative;display:flex;justify-content:center;padding-top:4px;pointer-events:auto"><span style="display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:18px;background:rgba(11,11,10,.8);backdrop-filter:blur(18px);border:1px solid rgba(232,255,0,.4);color:#E8FF00;font:600 10.5px/1 'Oswald',sans-serif;letter-spacing:.16em"><span style="width:6px;height:6px;border-radius:50%;background:#E8FF00;animation:mu-breathe 2s infinite"></span>WATCH MODE · /w/K7QB2X4M</span></div>
+          <div style="flex:1"></div>
+          <div style="position:relative;background:#0B0B0A;border-radius:22px 22px 0 0;border-top:1px solid rgba(244,243,238,.1);padding:10px 20px calc(18px + 26px);pointer-events:auto">
+            <div style="width:40px;height:4px;border-radius:2px;background:rgba(244,243,238,.28);margin:0 auto 16px"></div>
+            <div style="display:flex;align-items:flex-end;justify-content:space-between">
+              <div><div style="font:700 20px/1 'Noto Sans KR',sans-serif;color:#F4F3EE">화요일 저녁 러닝</div><div style="margin-top:8px;font:500 11.5px/1 'Noto Sans KR',sans-serif;color:#8A8A80;font-variant-numeric:tabular-nums">7명 참여 · 3초 전 갱신 · 슬롯 미사용</div></div>
+              <div style="text-align:right"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">FINISHED</div><div style="margin-top:6px;font:800 22px/1 'Archivo',sans-serif;color:#F4F3EE">1<span style="color:#5F5F58">/7</span></div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:18px;border-radius:6px;overflow:hidden">
+              <div style="padding:15px 12px;background:rgba(74,222,128,.1);text-align:center"><div style="font:800 24px/1 'Archivo',sans-serif;color:#4ADE80">4</div><div style="margin-top:6px;font:600 9px/1 'Oswald',sans-serif;letter-spacing:.12em;color:#8A8A80">● GREEN</div></div>
+              <div style="padding:15px 12px;background:rgba(232,255,0,.1);text-align:center"><div style="font:800 24px/1 'Archivo',sans-serif;color:#E8FF00">2</div><div style="margin-top:6px;font:600 9px/1 'Oswald',sans-serif;letter-spacing:.12em;color:#8A8A80">▲ AMBER</div></div>
+              <div style="padding:15px 12px;background:rgba(255,59,59,.12);text-align:center"><div style="font:800 24px/1 'Archivo',sans-serif;color:#FF3B3B">1</div><div style="margin-top:6px;font:600 9px/1 'Oswald',sans-serif;letter-spacing:.12em;color:#8A8A80">■ RED</div></div>
+            </div>
+            <div style="margin-top:14px;font:400 11px/1.6 'Noto Sans KR',sans-serif;color:#5F5F58">관전 모드에는 채팅 입력, KUDO, 안전 버튼, 관리 기능이 없어요. GPS 오류 배너도 표시하지 않습니다.</div>
+          </div>
+          <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:10px;width:132px;height:5px;border-radius:3px;background:rgba(244,243,238,.5)"></div>
+        </div>
+        </div>
+
+        <div class="scr" id="scr-hReport" style="display:none">
+        <div style="position:absolute;inset:0;z-index:4;background:#0B0B0A;display:flex;flex-direction:column">
+          <div style="position:absolute;inset:0 0 auto;height:420px;overflow:hidden">
+            <img src="assets/run/12.jpeg" alt="완주한 크루" style="width:100%;height:100%;object-fit:cover;object-position:50% 40%;opacity:.6;filter:grayscale(.25)">
+            <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,11,10,.5) 0%,rgba(11,11,10,.1) 28%,rgba(11,11,10,.92) 80%,#0B0B0A 100%)"></div>
+          </div>
+          <div style="position:relative;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font:600 13px/1 'Archivo',sans-serif;color:#F4F3EE"><span>9:41</span><span style="width:23px;height:11px;border:1.5px solid rgba(244,243,238,.8);border-radius:3px"></span></div>
+          <div style="position:relative;margin-top:212px;padding:0 20px">
+            <div style="font:600 11px/1 'Oswald',sans-serif;letter-spacing:.2em;color:#E8FF00">RUN CLOSED · HOST REPORT</div>
+            <h2 style="margin:13px 0 0;font:600 38px/.96 'Oswald',sans-serif;text-transform:uppercase;color:#F4F3EE">EVERYONE<br>CAME BACK.</h2>
+            <p style="margin:12px 0 0;font:400 13px/1.6 'Noto Sans KR',sans-serif;color:#A9A99E;max-width:300px">7명 전원 확인 완료. 완두콩은 2.1 km에서 안전하게 마무리했어요.</p>
+          </div>
+          <div style="position:relative;flex:1;padding:24px 20px 0;overflow:hidden">
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1px;border-radius:6px;overflow:hidden">
+              <div style="padding:15px 14px;background:rgba(244,243,238,.06)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">CREW DISTANCE</div><div style="margin-top:8px;font:800 24px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#F4F3EE">34.1<span style="font-size:11px;color:#8A8A80"> km</span></div></div>
+              <div style="padding:15px 14px;background:rgba(244,243,238,.06)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">CREW PACE</div><div style="margin-top:8px;font:800 24px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#F4F3EE">5:46</div></div>
+              <div style="padding:15px 14px;background:rgba(74,222,128,.1)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#4ADE80">HELP RESOLVED</div><div style="margin-top:8px;font:800 24px/1 'Archivo',sans-serif;color:#4ADE80">1 / 1</div></div>
+              <div style="padding:15px 14px;background:rgba(232,255,0,.1)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#C9D400">KUDO WINNER</div><div style="margin-top:8px;font:700 19px/1 'Noto Sans KR',sans-serif;color:#E8FF00">감자 · 5표</div></div>
+            </div>
+            <div style="margin-top:14px;padding:15px;border-radius:6px;background:rgba(232,255,0,.08);border-left:2px solid #E8FF00">
+              <div id="report-mvp-name" style="font:700 17px/1.3 'Noto Sans KR',sans-serif;color:#F4F3EE">집계 중...</div>
+              <div style="display:flex;gap:10px;margin-top:10px">
+                <div style="flex:1"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.12em;color:#8A8A80">PACE / MI</div><div id="report-pace" style="margin-top:4px;font:800 20px/1 'Archivo',sans-serif;color:#E8FF00">--</div></div>
+                <div style="flex:1"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.12em;color:#8A8A80">MILES RUN</div><div id="report-dist" style="margin-top:4px;font:800 20px/1 'Archivo',sans-serif;color:#E8FF00">0.00</div></div>
+              </div>
+              <div id="report-gift-box"></div>
+            </div>
+            <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:11px;padding:13px 15px;border-radius:6px;background:rgba(244,243,238,.05);font:500 11.5px/1.5 'Noto Sans KR',sans-serif;color:#A9A99E">호스트는 기본값으로 Winner 후보에서 제외돼요. 동점이면 완주 시각이 빠른 러너가 우선합니다.</div>
+              <div style="display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:6px;background:rgba(255,59,59,.1);border-left:2px solid #FF3B3B"><span style="font:700 14px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#FF3B3B">09:42</span><span style="font:500 11.5px/1.45 'Noto Sans KR',sans-serif;color:#D6D6CB">뒤 위치·채팅·KUDO·닉네임이 모두 파기돼요 (PURGED).</span></div>
+            </div>
+          </div>
+          <div style="position:relative;padding:14px 20px calc(18px + 26px);display:flex;gap:8px">
+            <button style="flex:1;height:54px;border:1px solid rgba(244,243,238,.2);border-radius:6px;background:transparent;color:#F4F3EE;font:600 10.5px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">GPX</button>
+            <button style="flex:1;height:54px;border:1px solid rgba(244,243,238,.2);border-radius:6px;background:transparent;color:#F4F3EE;font:600 10.5px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">JSON</button>
+            <button onclick="goSetup()" style="flex:1.4;height:54px;border:none;border-radius:6px;background:#E8FF00;color:#0B0B0A;font:600 10.5px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">NEW RUN</button>
+          </div>
+          <div style="position:absolute;left:50%;transform:translateX(-50%);bottom:10px;width:132px;height:5px;border-radius:3px;background:rgba(244,243,238,.5)"></div>
+        </div>
+        </div>
+
+        <div class="scr" id="scr-detailOpen" style="display:none">
+        <div style="position:absolute;inset:0;z-index:5;display:flex;align-items:flex-end;background:rgba(4,4,4,.5)">
+          <div style="width:100%;background:#0B0B0A;border-top:1px solid rgba(244,243,238,.14);border-radius:22px 22px 0 0;padding:12px 20px calc(20px + 26px);box-shadow:0 -24px 60px rgba(0,0,0,.7)">
+            <div onclick="closeDetail()" style="width:40px;height:4px;border-radius:2px;background:rgba(244,243,238,.28);margin:0 auto 18px;cursor:pointer"></div>
+            <div style="display:flex;align-items:center;gap:14px">
+              <span id="detail-avatar-ring" style="flex:none;width:60px;height:60px;border-radius:30px;overflow:hidden;border:2px solid #8A8A80"><span id="detail-avatar-img" role="img" style="display:block;width:100%;height:100%;background-size:cover;background-position:50% 38%"></span></span>
+              <span style="flex:1"><span style="display:block;font:700 21px/1.2 'Noto Sans KR',sans-serif;color:#F4F3EE"><span id="v-dName">-</span></span><span id="detail-badge-color" style="display:block;margin-top:6px;font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.12em;color:#8A8A80"><span id="v-dBadge">-</span></span></span>
+              <button onclick="closeDetail()" aria-label="닫기" style="flex:none;width:36px;height:36px;border:1px solid rgba(244,243,238,.18);border-radius:18px;background:transparent;color:#8A8A80;font:400 14px/1 sans-serif;cursor:pointer">✕</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:20px;border-radius:6px;overflow:hidden">
+              <div style="padding:14px"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">DISTANCE</div><div style="margin-top:7px;font:700 20px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#F4F3EE"><span id="v-dDist">-</span></div></div>
+              <div style="padding:14px;background:rgba(244,243,238,.06)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">PACE</div><div style="margin-top:7px;font:700 20px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#F4F3EE"><span id="v-dPace">-</span></div></div>
+              <div style="padding:14px;background:rgba(244,243,238,.06)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">CONNECTION</div><div id="detail-conn-color" style="margin-top:7px;font:700 14px/1 'Oswald',sans-serif;letter-spacing:.06em;color:#8A8A80"><span id="v-dConn">-</span></div></div>
+              <div style="padding:14px"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">INTENT</div><div style="margin-top:7px;font:700 14px/1 'Oswald',sans-serif;letter-spacing:.06em;color:#F4F3EE"><span id="v-dIntent">-</span></div></div>
+            </div>
+            <div style="margin-top:14px;padding:13px 15px;border-radius:6px;background:rgba(244,243,238,.05);font:500 11.5px/1.55 'Noto Sans KR',sans-serif;color:#A9A99E"><span id="v-dNote">-</span></div>
+            <div style="display:flex;gap:7px;margin-top:18px">
+              <button style="flex:1;height:50px;border:1px solid rgba(244,243,238,.2);border-radius:6px;background:transparent;color:#F4F3EE;font:600 10px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">LOCATE</button>
+              <button style="flex:1;height:50px;border:1px solid rgba(244,243,238,.2);border-radius:6px;background:transparent;color:#F4F3EE;font:600 10px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">PING</button>
+              <button style="flex:1;height:50px;border:1px solid rgba(255,59,59,.5);border-radius:6px;background:transparent;color:#FF3B3B;font:600 10px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">REMOVE</button>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <div class="scr" id="scr-alertOpen" style="display:none">
+        <div style="position:absolute;inset:0;z-index:6;background:rgba(4,4,4,.74);backdrop-filter:blur(6px);display:flex;align-items:flex-end">
+          <div style="width:100%;background:#0B0B0A;border-top:2px solid #FF3B3B;border-radius:22px 22px 0 0;padding:22px 20px calc(20px + 26px)" role="alertdialog" aria-live="assertive">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font:600 10px/1 'Oswald',sans-serif;letter-spacing:.2em;color:#FF3B3B">HELP · UNRESOLVED · L1</span>
+              <span style="font:700 13px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#FF3B3B"><span id="v-alertClock">-</span></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;margin-top:18px">
+              <span style="position:relative;flex:none;width:62px;height:62px"><span style="position:absolute;inset:0;border-radius:31px;border:2px solid #FF3B3B;animation:mu-ring 2s ease-out 2"></span><span style="position:absolute;inset:0;border-radius:31px;overflow:hidden;border:2px solid #FF3B3B"><img src="assets/run/15.avif" alt="완두콩" style="width:100%;height:100%;object-fit:cover;filter:grayscale(1)"></span></span>
+              <span><span style="display:block;font:700 21px/1.2 'Noto Sans KR',sans-serif;color:#F4F3EE">완두콩</span><span style="display:block;margin-top:6px;font:500 11.5px/1.4 'Noto Sans KR',sans-serif;color:#8A8A80">마지막 위치 5분 전 · 정확도 32 m · 핀 고정됨</span></span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:18px;border-radius:6px;overflow:hidden">
+              <div style="padding:13px 12px;background:rgba(255,59,59,.12)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#FF8A8A">AT COURSE</div><div style="margin-top:7px;font:700 18px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#F4F3EE">2.1<span style="font-size:11px;color:#8A8A80"> km</span></div></div>
+              <div style="padding:13px 12px;background:rgba(255,59,59,.12)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#FF8A8A">FROM ME</div><div style="margin-top:7px;font:700 18px/1 'Archivo',sans-serif;font-variant-numeric:tabular-nums;color:#F4F3EE">640<span style="font-size:11px;color:#8A8A80"> m</span></div></div>
+              <div style="padding:13px 12px;background:rgba(255,59,59,.12)"><div style="font:600 9px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#FF8A8A">SENT / ACK</div><div style="margin-top:7px;font:700 18px/1 'Archivo',sans-serif;color:#F4F3EE">6 / 2</div></div>
+            </div>
+            <button onclick="toggleEsc()" style="all:unset;cursor:pointer;display:block;width:100%;margin-top:16px;padding:13px 15px;border-radius:6px;background:rgba(244,243,238,.05);box-sizing:border-box">
+              <div style="display:flex;align-items:center;justify-content:space-between"><span style="font:600 9.5px/1 'Oswald',sans-serif;letter-spacing:.14em;color:#8A8A80">ESCALATION TIMELINE</span><span style="font:600 9.5px/1 'Oswald',sans-serif;color:#E8FF00"><span id="v-escLabel">-</span></span></div>
+              <div id="esc-panel" style="height:0px;overflow:hidden;transition:height 240ms cubic-bezier(.22,1,.36,1)">
+                <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px;font:500 11.5px/1.45 'Noto Sans KR',sans-serif;color:#A9A99E">
+                  <div style="display:flex;gap:10px"><span style="font:700 9.5px/1.4 'Oswald',sans-serif;color:#FF3B3B;width:26px">L0</span><span>00:00 · 호스트에게 소리 + 진동 + 모달 전달 (성공 1/1)</span></div>
+                  <div style="display:flex;gap:10px"><span style="font:700 9.5px/1.4 'Oswald',sans-serif;color:#FF3B3B;width:26px">L1</span><span>01:00 · 호스트 미확인으로 ONLINE 전원 6명에게 확대 전송</span></div>
+                  <div style="display:flex;gap:10px"><span style="font:700 9.5px/1.4 'Oswald',sans-serif;color:#8A8A80;width:26px">L2</span><span>03:00 · 아무도 확인하지 않으면 요청자에게 좌표 복사와 자가 대응 안내</span></div>
+                  <div style="display:flex;gap:10px"><span style="font:700 9.5px/1.4 'Oswald',sans-serif;color:#8A8A80;width:26px">LOCK</span><span>미해결 Help가 있는 슬롯은 회수·종료가 잠깁니다</span></div>
+                </div>
+              </div>
+            </button>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:18px">
+              <button onclick="resolveAlert()" style="height:56px;border:none;border-radius:6px;background:#E8FF00;color:#0B0B0A;font:600 13px/1 'Oswald',sans-serif;letter-spacing:.14em;cursor:pointer">확인하고 이동 · I'M ON IT</button>
+              <div style="display:flex;gap:8px">
+                <button onclick="closeAlert()" style="flex:1;height:48px;border:1px solid rgba(244,243,238,.2);border-radius:6px;background:transparent;color:#F4F3EE;font:600 10px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">COPY COORDS</button>
+                <button onclick="closeAlert()" style="flex:1;height:48px;border:1px solid rgba(244,243,238,.2);border-radius:6px;background:transparent;color:#F4F3EE;font:600 10px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">HOLD THE CREW</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <div class="scr" id="scr-menuOpen" style="display:none">
+        <div style="position:absolute;inset:0;z-index:6;background:rgba(4,4,4,.7);backdrop-filter:blur(6px);display:flex;align-items:flex-end">
+          <div style="width:100%;background:#0B0B0A;border-top:1px solid rgba(244,243,238,.14);border-radius:22px 22px 0 0;padding:12px 20px calc(20px + 26px)">
+            <div onclick="closeMenu()" style="width:40px;height:4px;border-radius:2px;background:rgba(244,243,238,.28);margin:0 auto 18px;cursor:pointer"></div>
+            <div style="font:600 10px/1 'Oswald',sans-serif;letter-spacing:.2em;color:#8A8A80">HOST CONTROLS</div>
+            <div style="margin-top:16px;display:flex;flex-direction:column">
+              <button onclick="closeMenu()" style="all:unset;cursor:pointer;display:flex;align-items:center;justify-content:space-between;height:62px;border-top:1px solid rgba(244,243,238,.08)"><span><span style="display:block;font:600 14px/1 'Noto Sans KR',sans-serif;color:#F4F3EE">호스트 권한 이양</span><span style="display:block;margin-top:5px;font:400 10.5px/1 'Noto Sans KR',sans-serif;color:#6E6E66">ONLINE 멤버 선택 · host epoch +1</span></span><span style="font:400 14px/1 sans-serif;color:#5F5F58">›</span></button>
+              <button onclick="closeMenu()" style="all:unset;cursor:pointer;display:flex;align-items:center;justify-content:space-between;height:62px;border-top:1px solid rgba(244,243,238,.08)"><span><span style="display:block;font:600 14px/1 'Noto Sans KR',sans-serif;color:#F4F3EE">GONE 슬롯 회수</span><span style="display:block;margin-top:5px;font:400 10.5px/1 'Noto Sans KR',sans-serif;color:#FF3B3B">미해결 Help 슬롯 1개는 잠김</span></span><span style="font:400 14px/1 sans-serif;color:#5F5F58">›</span></button>
+              <button onclick="closeMenu()" style="all:unset;cursor:pointer;display:flex;align-items:center;justify-content:space-between;height:62px;border-top:1px solid rgba(244,243,238,.08)"><span><span style="display:block;font:600 14px/1 'Noto Sans KR',sans-serif;color:#F4F3EE">멤버 내보내기</span><span style="display:block;margin-top:5px;font:400 10.5px/1 'Noto Sans KR',sans-serif;color:#6E6E66">확인 모달 필요</span></span><span style="font:400 14px/1 sans-serif;color:#5F5F58">›</span></button>
+              <button onclick="goWatch()" style="all:unset;cursor:pointer;display:flex;align-items:center;justify-content:space-between;height:62px;border-top:1px solid rgba(244,243,238,.08)"><span><span style="display:block;font:600 14px/1 'Noto Sans KR',sans-serif;color:#F4F3EE">관전 링크 열기</span><span style="display:block;margin-top:5px;font:400 10.5px/1 'Noto Sans KR',sans-serif;color:#6E6E66">/w/K7QB2X4M · 슬롯 미사용</span></span><span style="font:400 14px/1 sans-serif;color:#5F5F58">›</span></button>
+              <button onclick="openEnd()" style="all:unset;cursor:pointer;display:flex;align-items:center;justify-content:space-between;height:62px;border-top:1px solid rgba(244,243,238,.08);border-bottom:1px solid rgba(244,243,238,.08)"><span><span style="display:block;font:600 14px/1 'Noto Sans KR',sans-serif;color:#FF3B3B">전체 종료 / 권한 넘기고 나가기</span><span style="display:block;margin-top:5px;font:400 10.5px/1 'Noto Sans KR',sans-serif;color:#6E6E66">재확인 모달에서 선택</span></span><span style="font:400 14px/1 sans-serif;color:#5F5F58">›</span></button>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <div class="scr" id="scr-endOpen" style="display:none">
+        <div style="position:absolute;inset:0;z-index:7;background:rgba(4,4,4,.74);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px">
+          <div style="width:100%;background:#0B0B0A;border:1px solid rgba(244,243,238,.14);border-radius:12px;padding:24px">
+            <div style="font:600 10px/1 'Oswald',sans-serif;letter-spacing:.2em;color:#8A8A80">END SESSION · CONFIRM</div>
+            <div style="margin-top:14px;font:700 20px/1.4 'Noto Sans KR',sans-serif;color:#F4F3EE">아직 <span style="color:#E8FF00">3명</span>이 달리는 중이에요.<br>지금 종료할까요?</div>
+            <p style="margin:10px 0 0;font:400 12px/1.6 'Noto Sans KR',sans-serif;color:#8A8A80">종료하면 전원이 요약 화면으로 이동하고, 좌표 버퍼를 5초간 플러시한 뒤 10분 후 데이터가 파기돼요. 미해결 Help가 있으면 종료가 보류됩니다.</p>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:20px">
+              <button onclick="goReport()" style="height:52px;border:none;border-radius:6px;background:#FF3B3B;color:#fff;font:600 11.5px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">END FOR EVERYONE</button>
+              <button onclick="closeEnd()" style="height:48px;border:1px solid rgba(244,243,238,.2);border-radius:6px;background:transparent;color:#F4F3EE;font:600 10.5px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">권한 넘기고 나만 나가기</button>
+              <button onclick="closeEnd()" style="height:44px;border:none;background:transparent;color:#6E6E66;font:600 10.5px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer">CANCEL</button>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;width:390px">
+        <div id="hostRailList"></div>
+      </div>
+      <div style="width:390px;font:400 11.5px/1.7 'Noto Sans KR',sans-serif;color:#6E6E66">SETUP은 <b style="color:#A9A99E">빈 상태</b>로 시작해 코스를 탭하면 거리·시간·집결지·목표 페이스가 열립니다. ALERTS 탭은 URGENT→NOTICE→AMBIENT 우선순위, ROSTER 행이나 지도 마커를 탭하면 러너 상세 시트가 열려요.</div>
     </div>
-    <input type="text" id="gateRouteStart" placeholder="Start (e.g. USC Gate 3)">
-    <div class="chip-row">
-      <span class="chip" onclick="document.getElementById('gateRouteStart').value='USC Gate 3, Los Angeles'">USC Gate 3</span>
-      <span class="chip" onclick="document.getElementById('gateRouteStart').value='Exposition Park, Los Angeles'">Exposition Park</span>
-    </div>
-    <input type="text" id="gateRouteDest" placeholder="Destination (e.g. Griffith Observatory)">
-    <div class="chip-row">
-      <span class="chip" onclick="document.getElementById('gateRouteDest').value='Griffith Observatory, Los Angeles'">Griffith Observatory</span>
-      <span class="chip" onclick="document.getElementById('gateRouteDest').value='Hollywood Sign, Los Angeles'">Hollywood Sign</span>
-      <span class="chip" onclick="document.getElementById('gateRouteDest').value='Santa Monica Pier'">Santa Monica Pier</span>
-    </div>
-    <div class="sub" style="margin-top:4px;">Can't find it by name? (works for literally any spot)</div>
-    <button class="btn btn-outline" onclick="toggleGateMap()">📍 Tap the map instead</button>
-    <div id="gateMapContainer" style="display:none; margin: 10px 0;">
-      <div class="sub" id="gateMapInstruction">Tap your starting point on the map</div>
-      <div id="gateMap" style="height:280px; border-radius:14px; overflow:hidden;"></div>
-    </div>
-    <button class="btn btn-primary" onclick="confirmGateRoute()">Set Route & Continue</button>
-    <button class="btn btn-outline" onclick="skipGateRoute()">Use default (USC → Hollywood Sign)</button>
-    <div class="sub" id="gateRouteStatus"></div>
+
+<div id="giftModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:200; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#16160f; border:1px solid rgba(244,243,238,.14); border-radius:10px; padding:20px; max-width:390px; width:100%; max-height:80vh; overflow-y:auto;">
+    <h3 style="margin:0 0 12px; font:600 16px/1 'Oswald',sans-serif; color:#F4F3EE;">🎁 PICK YOUR GIFT</h3>
+    <div id="giftCatalog" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"></div>
+    <input type="text" id="giftEmail" placeholder="you@email.com" style="width:100%; margin-top:10px; padding:12px; border-radius:6px; border:1px solid rgba(244,243,238,.14); background:rgba(244,243,238,.06); color:#F4F3EE;">
+    <button onclick="submitGiftClaim()" style="width:100%; margin-top:10px; height:48px; border:none; border-radius:6px; background:#E8FF00; color:#0B0B0A; font:600 13px/1 'Oswald',sans-serif; letter-spacing:.1em; cursor:pointer;">SEND MY GIFT</button>
+    <button onclick="closeGiftModal()" style="width:100%; margin-top:8px; height:44px; border:1px solid rgba(244,243,238,.18); border-radius:6px; background:transparent; color:#F4F3EE; cursor:pointer;">CANCEL</button>
+    <div id="giftClaimStatus" style="margin-top:8px; font-size:13px; color:#8A8A80;"></div>
   </div>
 </div>
-
-<div id="mainApp" style="display:none;">
-
-<div class="navbar">
-  <div class="brand">⚡ FlashChat</div>
-  <div class="role-badge">👑 Leader</div>
-</div>
-
-<div class="tabbar">
-  <button class="tab-btn active" data-tab="map" onclick="switchTab('map')">🗺️ Map</button>
-  <button class="tab-btn" data-tab="chat" onclick="switchTab('chat')">💬 Chat</button>
-  <button class="tab-btn" data-tab="status" onclick="switchTab('status')">📊 Status</button>
-</div>
-
-<div class="tab-panel map-panel active" id="panel-map">
-  <div id="map" class="fullbleed"></div>
-  <div class="crew-hud" id="crewHud">
-    <div class="hud-title">Crew</div>
-    <div id="crewHudList"></div>
-  </div>
-</div>
-
-<div class="tab-panel" id="panel-chat">
-  <div class="chat-box" id="chatBox"></div>
-  <div class="chat-input-row">
-    <input type="text" id="chatInput" placeholder="Type a message...">
-    <button class="chat-send-btn" onclick="sendChatMessage()">➤</button>
-  </div>
-</div>
-
-<div class="tab-panel" id="panel-status">
-  <div class="stat-grid">
-    <div class="stat-card"><div class="stat-value" id="crewCount">0</div><div class="stat-label">Crew members</div></div>
-    <div class="stat-card"><div class="stat-value" id="sessionCodeStat">-</div><div class="stat-label">Session code</div></div>
-  </div>
-
-  <div id="qrArea" class="qr-box"></div>
-
-  <div id="simArea" style="margin-bottom:16px;">
-    <div class="sub">Demo mode — add virtual runners with varied paces</div>
-    <button class="btn btn-outline" onclick="spawnSimRunners()">🤖 Add 4 test runners</button>
-  </div>
-
-  <button class="btn btn-primary" id="startBtn" onclick="startSession()">🏁 Start Run (Lock Session)</button>
-  <button class="btn btn-danger" id="endBtn" style="display:none" onclick="endSession()">⏹ End Session (Start MVP Vote)</button>
-
-  <div id="hostStatusArea" style="display:none; margin-top: 20px;">
-    <div class="sub">Your status (you're part of the crew too)</div>
-    <div class="stat-grid">
-      <div class="stat-card"><div class="stat-value" id="paceValue">--</div><div class="stat-label">Pace / mi</div></div>
-      <div class="stat-card"><div class="stat-value" id="distValue">0.00</div><div class="stat-label">Distance mi</div></div>
-    </div>
-    <div class="status-grid">
-      <div class="status-btn active" data-v="OK" onclick="setStatus('OK')">✅ I'm OK</div>
-      <div class="status-btn" data-v="WATER_BREAK" onclick="setStatus('WATER_BREAK')">💧 Water Break</div>
-      <div class="status-btn" data-v="REST" onclick="setStatus('REST')">🧍 Rest Request</div>
-      <div class="status-btn" data-v="HOME" onclick="setStatus('HOME')">🏠 Heading Home</div>
-      <div class="status-btn sos" data-v="EMERGENCY" onclick="setStatus('EMERGENCY')">🆘 Emergency Help (SOS)</div>
-    </div>
-  </div>
-</div>
-
-</div><!-- /mainApp -->
-
-<div id="votingArea" style="display:none">
-  <div class="wrap center-text">
-    <div class="big-emoji">🎉</div>
-    <h1>Great run!</h1>
-    <div class="sub">Nominate today's MVP crew member</div>
-    <div id="voteOptions" style="text-align:left; margin-top: 20px;"></div>
-    <div id="voteStatus" class="sub" style="display:none">✅ Vote submitted — waiting for the rest of the crew...</div>
-  </div>
-</div>
-
-<div id="resultArea" style="display:none" class="center-text">
-  <div class="wrap">
-    <div class="big-emoji">🏆</div>
-    <h1 id="mvpName">-</h1>
-    <div class="sub" id="mvpSubtext">Great job! Let's run again soon 🙌</div>
-    <div class="stat-grid" style="margin-top:6px;">
-      <div class="stat-card"><div class="stat-value" id="finalPace">--</div><div class="stat-label">Pace / mi</div></div>
-      <div class="stat-card"><div class="stat-value" id="finalDist">0.00</div><div class="stat-label">Miles run</div></div>
-    </div>
-    <div id="giftBox"></div>
-  </div>
-</div>
-
-<div id="giftModal" class="modal-overlay" style="display:none;">
-  <div class="modal-card">
-    <h3 style="margin-top:0;">🎁 Pick your gift</h3>
-    <div id="giftCatalog" class="gift-grid"><div class="sub">Loading catalog...</div></div>
-    <input type="text" id="giftEmail" placeholder="you@email.com" style="margin-top:8px;">
-    <button class="btn btn-primary" onclick="submitGiftClaim()">Send my gift</button>
-    <button class="btn btn-outline" onclick="closeGiftModal()">Cancel</button>
-    <div class="sub" id="giftClaimStatus"></div>
-  </div>
-</div>
-
 <script>
-let ROUTE_WAYPOINTS = [[34.0224, -118.2851], [34.1341, -118.3215]];
-let routeLabels = ['USC', 'Hollywood Sign'];
-let landmarkMarkers = [];
-let routeInitialized = false;
+const PRESETS = {
+  usc: { km:'5.0', time:'~35 MIN', meet:'USC Tommy Trojan', finish:'Exposition Park',
+         startCoord:[34.0224,-118.2851], destCoord:[34.0189,-118.2870], startLabel:'USC', destLabel:'Exposition Park' },
+  hwd: { km:'10.0', time:'~70 MIN', meet:'USC Tommy Trojan', finish:'Hollywood Sign',
+         startCoord:[34.0224,-118.2851], destCoord:[34.1341,-118.3215], startLabel:'USC', destLabel:'Hollywood Sign' }
+};
+const SIM_LABELS = { fast:'FAST', normal:'NORMAL', slow:'SLOW', stuck:'STUCK' };
+const SIM_DESC = {
+  fast: '선두에서 치고 나가는 러너 프로필.', normal: '기준 페이스로 완주하는 러너.',
+  slow: '점점 뒤처져서 LAGGING 상태를 유발함.', stuck: '한동안 멈춰서 STUCK 판정을 유발함.'
+};
 
-let ws, map, markers = {}, sessionId = null, hasVoted = false, following = false, latestMembers = [];
-let traveledLine = null, remainingLine = null;
-let seenMemberNames = new Set(), hasStarted = false, lastKnownStatus = {};
+let sessionId = null, ws = null, joinUrl = null;
+let preset = null, goal = null, simEnabled = false, simCount = 4, simPick = null;
+let hostSheetExpanded = false, escOpen = false;
+let members = [], phase = 'WAITING', route = null, routeLabels = ['USC','Hollywood Sign'];
+let liveTab = 'alerts', detailName = null;
 let runStartTs = null, lastFixPos = null, totalDistanceM = 0;
-let gateMap = null, gateStartLatLng = null, gateDestLatLng = null, gateStartMarker = null, gateDestMarker = null;
-let selectedGiftId = null;
+let mvp = null, canClaimGift = false, selectedGiftId = null;
+let routeInitialized = false;
+let map, crewMarkers = [], routeLine = null;
 
-function brandMarkerIcon(label){
-  return L.divIcon({
-    className: 'brand-marker',
-    html: `<div class="brand-marker-pill">${label}</div><div class="brand-marker-dot"></div>`,
-    iconSize: [90, 46],
-    iconAnchor: [45, 40]
-  });
+function avatarFor(name){
+  let h = 0;
+  for (let i=0;i<name.length;i++) h = (h<<5)-h+name.charCodeAt(i);
+  return 'assets/av/' + ((Math.abs(h) % 12) + 1) + '.png';
 }
-
-function drawRoute(waypoints, labels){
-  ROUTE_WAYPOINTS = waypoints;
-  routeLabels = labels;
-  landmarkMarkers.forEach(m => map.removeLayer(m));
-  landmarkMarkers = [];
-  if(remainingLine) map.removeLayer(remainingLine);
-  if(traveledLine) map.removeLayer(traveledLine);
-  landmarkMarkers.push(L.marker(waypoints[0], { icon: brandMarkerIcon(labels[0]) }).addTo(map));
-  landmarkMarkers.push(L.marker(waypoints[waypoints.length-1], { icon: brandMarkerIcon(labels[labels.length-1]) }).addTo(map));
-  remainingLine = L.polyline(waypoints, { color: '#E8FF00', weight: 7, opacity: 0.95 }).addTo(map);
-  map.fitBounds(waypoints, { padding: [30, 30] });
+function toneFor(m){
+  if (m.status === 'EMERGENCY' || m.status === 'STUCK') return '#FF3B3B';
+  if (m.status === 'LAGGING' || m.self_status === 'WATER_BREAK' || m.self_status === 'REST') return '#E8FF00';
+  if (m.self_status === 'HOME') return '#8A8A80';
+  return '#4ADE80';
 }
-
-function switchTab(name){
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${name}`));
-  if(name === 'map' && map) setTimeout(() => map.invalidateSize(), 50);
+function badgeFor(m){
+  if (m.status === 'EMERGENCY') return 'HELP';
+  if (m.status === 'STUCK') return 'STUCK';
+  if (m.self_status === 'HOME') return 'DONE';
+  if (m.status === 'LAGGING') return '▲ AMBER';
+  return '● GREEN';
 }
-function statusColorClass(m){
-  if(m.status === 'STUCK' || m.status === 'EMERGENCY') return 'dot-red';
-  if(m.status === 'LAGGING' || m.self_status === 'WATER_BREAK' || m.self_status === 'REST') return 'dot-amber';
-  if(m.self_status === 'HOME') return 'dot-grey';
-  return 'dot-green';
-}
-function selfStatusEmoji(s){
-  return { WATER_BREAK: ' 💧', REST: ' 🧍', HOME: ' 🏠' }[s] || '';
-}
-function renderCrewHud(members){
-  document.getElementById('crewHudList').innerHTML = members.map(m => `
-    <div class="hud-member">
-      <span class="status-dot ${statusColorClass(m)}"></span>
-      <span>${m.name}${selfStatusEmoji(m.self_status)} ${m.role==='host' ? '👑' : ''}${m.sim ? ' 🤖' : ''}</span>
-    </div>`).join('');
+function setText(id, val){ const el = document.getElementById(id); if(el) el.textContent = val; }
+function show(id){ const el = document.getElementById(id); if(el) el.style.display = 'block'; }
+function hide(id){ const el = document.getElementById(id); if(el) el.style.display = 'none'; }
+function showOne(group, activeId){ group.forEach(id => id === activeId ? show(id) : hide(id)); }
+function setPill(id, on){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.style.background = on ? '#E8FF00' : 'transparent';
+  el.style.color = on ? '#0B0B0A' : '#8A8A80';
+  el.style.borderColor = on ? '#E8FF00' : 'rgba(244,243,238,.18)';
 }
 
+// ---------- 초기화 ----------
 async function init(){
-  const res = await fetch('/api/create_session', { method: 'POST' });
+  const res = await fetch('/api/create_session', { method:'POST' });
   const data = await res.json();
   sessionId = data.session_id;
-  document.getElementById('sessionCodeStat').textContent = sessionId;
+  joinUrl = location.origin + '/join.html?session=' + sessionId;
+  setText('v-roomCode', sessionId);
+  goSetup();
+  renderPreset();
+  renderGoal();
+  renderLiveTabs();
 }
 
-function initMainApp(){
-  document.getElementById('routeGate').style.display = 'none';
-  const joinUrl = `${location.origin}/join.html?session=${sessionId}`;
-  new QRCode(document.getElementById('qrArea'), { text: joinUrl, width: 200, height: 200 });
+// ---------- 코스 선택 (SETUP) ----------
+function pickUsc(){ preset = 'usc'; renderPreset(); }
+function pickHwd(){ preset = 'hwd'; renderPreset(); }
+function pace0(){ goal='free'; renderGoal(); }
+function pace5(){ goal='5:30'; renderGoal(); }
+function pace6(){ goal='6:00'; renderGoal(); }
+function pace7(){ goal='7:00'; renderGoal(); }
 
-  map = L.map('map');
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
-  drawRoute(ROUTE_WAYPOINTS, routeLabels);
-  routeInitialized = true;
+function renderPreset(){
+  setPill('btn-usc', preset==='usc');
+  setPill('btn-hwd', preset==='hwd');
+  showOne(['scr-noPreset','scr-hasPreset'], preset ? 'scr-hasPreset' : 'scr-noPreset');
+  if(preset){
+    const p = PRESETS[preset];
+    setText('v-presetKm', p.km); setText('v-presetTime', p.time);
+    setText('v-presetMeet', p.meet); setText('v-presetFinish', p.finish);
+  }
+  const cta = document.getElementById('btn-cta');
+  cta.style.background = preset ? '#E8FF00' : 'rgba(244,243,238,.1)';
+  cta.style.color = preset ? '#0B0B0A' : '#6E6E66';
+  cta.style.opacity = preset ? '1' : '.6';
+  cta.disabled = !preset;
+  setText('v-ctaLabel', preset ? 'GENERATE QR · GET THE CREW' : 'SELECT A COURSE FIRST');
+}
+function renderGoal(){
+  setPill('btn-g0', goal==='free'); setPill('btn-g5', goal==='5:30');
+  setPill('btn-g6', goal==='6:00'); setPill('btn-g7', goal==='7:00');
+}
 
-  document.getElementById('mainApp').style.display = 'block';
+// ---------- 화면 전환 ----------
+const TOP_SCREENS = ['scr-hSetup','scr-hLobby','scr-hLive','scr-hSim','scr-hWatch','scr-hReport'];
+function goSetup(){ showOne(TOP_SCREENS, 'scr-hSetup'); hide('scr-menuOpen'); hide('scr-endOpen'); }
+function goSim(){ showOne(TOP_SCREENS, 'scr-hSim'); renderSimScreen(); }
+function goWatch(){ showOne(TOP_SCREENS, 'scr-hWatch'); hide('scr-menuOpen'); }
+function goReport(){ showOne(TOP_SCREENS, 'scr-hReport'); hide('scr-endOpen'); hide('scr-menuOpen'); }
+
+async function goLobby(){
+  if(!preset || !sessionId) return;
+  const p = PRESETS[preset];
   connectWS();
-  requestWakeLock();
   watchLocation();
+  await fetch('/api/set_route/' + sessionId, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ start_coords: p.startCoord, dest_coords: p.destCoord, start_label: p.startLabel, dest_label: p.destLabel })
+  });
+  showOne(TOP_SCREENS, 'scr-hLobby');
+  showOne(['scr-lobbyPicked','scr-lobbyIdle'], 'scr-lobbyIdle');
+  setText('v-joinUrlShort', joinUrl.replace(/^https?:\/\//, ''));
+  setTimeout(() => new QRCode(document.getElementById('mu3-qr-target'), { text: joinUrl, width: 100, height: 100 }), 50);
+}
 
-  document.getElementById('chatInput').addEventListener('keydown', (e) => {
-    if(e.key === 'Enter') sendChatMessage();
+function goLive(){
+  if(document.getElementById('scr-hSim').style.display !== 'none' && simEnabled && simCount > 0){
+    fetch('/api/spawn_sim_runners/' + sessionId, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ count: simCount })
+    });
+  }
+  if(ws && ws.readyState === 1) ws.send(JSON.stringify({ action:'START_SESSION' }));
+  showOne(TOP_SCREENS, 'scr-hLive');
+  setTimeout(initMap, 50);
+}
+
+// ---------- 시뮬레이터 화면 ----------
+function toggleSim(){
+  simEnabled = !simEnabled;
+  document.getElementById('sim-toggle-track').style.background = simEnabled ? '#4ADE80' : 'rgba(244,243,238,.14)';
+  document.getElementById('sim-toggle-knob').style.left = simEnabled ? '23px' : '3px';
+}
+function simPlus(){ simCount = Math.min(9, simCount+1); setText('v-simCount', simCount); }
+function simMinus(){ simCount = Math.max(1, simCount-1); setText('v-simCount', simCount); }
+function renderSimScreen(){
+  setText('v-simCount', simCount);
+  const list = document.getElementById('simProfilesList');
+  if(list) list.innerHTML = ['fast','normal','slow','stuck'].map(k => `
+    <button onclick="pickSimProfile('${k}')" class="pill-toggle" style="flex:1;height:40px;border-radius:5px;font:700 11px/1 'Archivo',sans-serif;cursor:pointer;${simPick===k ? 'background:#E8FF00;color:#0B0B0A;border-color:#E8FF00' : 'background:transparent;color:#8A8A80;border:1px solid rgba(244,243,238,.18)'}">${SIM_LABELS[k]}</button>
+  `).join('');
+  showOne(['scr-simHasPick','scr-simNoPick'], simPick ? 'scr-simHasPick' : 'scr-simNoPick');
+  if(simPick){ setText('v-simPickLabel', SIM_LABELS[simPick]); setText('v-simPickDesc', SIM_DESC[simPick]); }
+}
+function pickSimProfile(k){ simPick = simPick===k ? null : k; renderSimScreen(); }
+
+// ---------- 로비 ----------
+function copyLink(){
+  if(joinUrl) navigator.clipboard.writeText(joinUrl).catch(()=>{});
+  setText('v-copyLabel', 'COPIED');
+  setTimeout(()=>setText('v-copyLabel','COPY LINK'), 1600);
+}
+
+// ---------- 실시간 (LIVE) ----------
+function tabAlerts(){ liveTab='alerts'; renderLiveTabs(); }
+function tabRoster(){ liveTab='roster'; renderLiveTabs(); }
+function renderLiveTabs(){
+  setPill('btn-tabAlerts', liveTab==='alerts');
+  setPill('btn-tabRoster', liveTab==='roster');
+  showOne(['scr-isAlerts','scr-isRoster'], liveTab==='alerts' ? 'scr-isAlerts' : 'scr-isRoster');
+}
+function toggleHostSheet(){
+  hostSheetExpanded = !hostSheetExpanded;
+  document.getElementById('host-sheet-panel').style.height = hostSheetExpanded ? '300px' : '176px';
+  setText('v-sheetLabel', hostSheetExpanded ? 'COLLAPSE' : 'EXPAND');
+}
+function openAlert(){ show('scr-alertOpen'); }
+function closeAlert(){ hide('scr-alertOpen'); }
+function resolveAlert(){ hide('scr-alertOpen'); escOpen = false; hide('esc-panel'); }
+function toggleEsc(){
+  escOpen = !escOpen;
+  document.getElementById('esc-panel').style.height = escOpen ? '150px' : '0px';
+  setText('v-escLabel', escOpen ? 'HIDE' : 'SHOW');
+}
+function openMenu(){ show('scr-menuOpen'); }
+function closeMenu(){ hide('scr-menuOpen'); }
+function openEnd(){ show('scr-endOpen'); hide('scr-menuOpen'); }
+function closeEnd(){ hide('scr-endOpen'); }
+function confirmEndSession(){
+  if(ws) ws.send(JSON.stringify({ action:'END_SESSION' }));
+  hide('scr-endOpen');
+}
+function closeDetail(){ hide('scr-detailOpen'); detailName = null; }
+function openDetail(name){
+  detailName = name;
+  const m = members.find(x=>x.name===name);
+  if(!m) return;
+  setText('v-dName', m.name);
+  document.getElementById('detail-avatar-img').style.backgroundImage = `url(${avatarFor(m.name)})`;
+  const ring = toneFor(m);
+  document.getElementById('detail-avatar-ring').style.borderColor = ring;
+  document.getElementById('detail-badge-color').style.color = ring;
+  document.getElementById('detail-conn-color').style.color = ring;
+  setText('v-dBadge', m.status==='EMERGENCY' ? 'HELP · 도움이 필요해요' : (m.self_status==='HOME' ? 'FINISHED FOR TODAY' : (m.status==='LAGGING' ? '▲ AMBER · 뒤처지는 중' : '● GREEN · IN THE PACK')));
+  setText('v-dConn', m.connected ? 'ONLINE' : 'OFFLINE');
+  setText('v-dDist', '—'); setText('v-dPace', '—');
+  setText('v-dIntent', m.self_status==='HOME' ? 'GAVE_UP' : 'RUNNING');
+  show('scr-detailOpen');
+}
+
+// ---------- 지도 ----------
+function initMap(){
+  if(map) return;
+  map = L.map('mu3-map-host');
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'&copy; OpenStreetMap' }).addTo(map);
+  if(route) drawRouteAndCrew();
+}
+function drawRouteAndCrew(){
+  if(!map) return;
+  if(routeLine) map.removeLayer(routeLine);
+  if(route && route.length>1){
+    routeLine = L.polyline(route, { color:'#E8FF00', weight:6, opacity:.9 }).addTo(map);
+    map.fitBounds(route, { padding:[30,30] });
+  }
+  crewMarkers.forEach(mk=>map.removeLayer(mk));
+  crewMarkers = [];
+  members.forEach(m => {
+    if(m.lat==null || m.lng==null) return;
+    const isMe = m.name==='Host';
+    const size = isMe?46:38;
+    const ring = toneFor(m);
+    const html = `<div style="position:relative;width:${size}px;height:${size}px"><span style="position:absolute;inset:0;border-radius:50%;overflow:hidden;border:3px solid ${ring};box-shadow:0 4px 12px rgba(0,0,0,.5)"><img src="${avatarFor(m.name)}" style="width:100%;height:100%;object-fit:cover"></span></div>`;
+    const icon = L.divIcon({ className:'', iconSize:[size,size], iconAnchor:[size/2,size/2], html });
+    const marker = L.marker([m.lat,m.lng], {icon}).addTo(map).on('click', ()=>openDetail(m.name));
+    crewMarkers.push(marker);
   });
 }
 
-async function confirmGateRoute(){
-  const start = document.getElementById('gateRouteStart').value.trim();
-  const dest = document.getElementById('gateRouteDest').value.trim();
-  const statusEl = document.getElementById('gateRouteStatus');
-  let body;
-  if(gateStartLatLng && gateDestLatLng){
-    body = { start_coords: gateStartLatLng, dest_coords: gateDestLatLng, start_label: start || 'Start point', dest_label: dest || 'Destination point' };
-  } else {
-    if(!start || !dest){ statusEl.textContent = 'Enter both, tap the map, or tap "Use default" below.'; return; }
-    body = { start, destination: dest };
-  }
-  statusEl.textContent = 'Setting up route...';
-  try {
-    const res = await fetch(`/api/set_route/${sessionId}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
-    });
-    const data = await res.json();
-    if(data.ok){
-      ROUTE_WAYPOINTS = data.route;
-      routeLabels = data.route_labels;
-      initMainApp();
-    } else {
-      statusEl.textContent = "❌ Couldn't find one of those places — try 📍 Tap the map instead, or Use default.";
-    }
-  } catch(e) {
-    statusEl.textContent = '❌ Network error — you can still tap "Use default" to continue.';
-  }
-}
-function skipGateRoute(){ initMainApp(); }
+// ---------- 로스터 렌더 ----------
+function renderRoster(){
+  const list = document.getElementById('rosterList');
+  if(!list) return;
+  list.innerHTML = members.map(m => `
+    <div onclick="openDetail('${m.name}')" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(244,243,238,.08);cursor:pointer">
+      <span style="width:36px;height:36px;border-radius:18px;overflow:hidden;border:2px solid ${toneFor(m)};flex-shrink:0"><img src="${avatarFor(m.name)}" style="width:100%;height:100%;object-fit:cover"></span>
+      <span style="flex:1;font:500 13px/1.3 'Noto Sans KR',sans-serif;color:#F4F3EE">${m.name}${m.sim?' 🤖':''}</span>
+      <span style="font:600 10px/1 'Oswald',sans-serif;letter-spacing:.08em;color:${toneFor(m)}">${badgeFor(m)}</span>
+    </div>`).join('');
+  const emergencyCount = members.filter(m=>m.status==='EMERGENCY').length;
+  setText('v-openAlerts', emergencyCount);
+  if(emergencyCount > 0) show('scr-alertOpen'); 
 
-function toggleGateMap(){
-  const container = document.getElementById('gateMapContainer');
-  const willShow = container.style.display === 'none';
-  container.style.display = willShow ? 'block' : 'none';
-  if(willShow && !gateMap){
-    gateMap = L.map('gateMap').setView([34.05, -118.25], 11);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(gateMap);
-    gateMap.on('click', onGateMapClick);
-  } else if(willShow){
-    setTimeout(() => gateMap.invalidateSize(), 50);
-  }
-}
-function onGateMapClick(e){
-  const ll = [e.latlng.lat, e.latlng.lng];
-  if(!gateStartLatLng){
-    gateStartLatLng = ll;
-    gateStartMarker = L.circleMarker(e.latlng, { radius: 9, color: '#fff', weight: 3, fillColor: '#22c55e', fillOpacity: 0.95 }).addTo(gateMap);
-    document.getElementById('gateMapInstruction').textContent = 'Now tap your destination';
-  } else if(!gateDestLatLng){
-    gateDestLatLng = ll;
-    gateDestMarker = L.circleMarker(e.latlng, { radius: 9, color: '#fff', weight: 3, fillColor: '#c62828', fillOpacity: 0.95 }).addTo(gateMap);
-    document.getElementById('gateMapInstruction').textContent = '✅ Both points set — tap "Set Route & Continue" below';
-  } else {
-    gateMap.removeLayer(gateStartMarker); gateMap.removeLayer(gateDestMarker);
-    gateStartLatLng = ll; gateDestLatLng = null;
-    gateStartMarker = L.circleMarker(e.latlng, { radius: 9, color: '#fff', weight: 3, fillColor: '#22c55e', fillOpacity: 0.95 }).addTo(gateMap);
-    document.getElementById('gateMapInstruction').textContent = 'Now tap your destination';
+  const lobbyList = document.getElementById('lobbyCrewList');
+  if(lobbyList){
+    lobbyList.innerHTML = members.filter(m=>m.name!=='Host').map(m => `
+      <button onclick="openDetail('${m.name}')" style="all:unset;cursor:pointer;width:50px;height:50px;border-radius:25px;overflow:hidden;border:2px solid ${toneFor(m)}">
+        <img src="${avatarFor(m.name)}" style="width:100%;height:100%;object-fit:cover">
+      </button>`).join('');
   }
 }
 
+// ---------- WebSocket ----------
 function connectWS(){
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-  ws = new WebSocket(`${proto}://${location.host}/ws/${sessionId}?name=${encodeURIComponent('Host')}&role=host`);
+  ws = new WebSocket(`${proto}://${location.host}/ws/${sessionId}?name=Host&role=host`);
   ws.onmessage = (ev) => {
     const msg = JSON.parse(ev.data);
-    if(msg.type === 'CREW_UPDATE') onCrewUpdate(msg);
-    if(msg.type === 'CHAT') onChat(msg.name, msg.text, msg.ts);
-    if(msg.type === 'SESSION_END') showResult(msg.mvp, msg.can_claim_gift);
+    if(msg.type === 'CREW_UPDATE'){
+      members = msg.members; phase = msg.phase;
+      if(msg.route && JSON.stringify(msg.route) !== JSON.stringify(route)){
+        route = msg.route; routeLabels = msg.route_labels || routeLabels;
+        drawRouteAndCrew();
+      } else { drawRouteAndCrew(); }
+      renderRoster();
+      setText('v-joined', members.filter(m=>m.name!=='Host').length);
+      if(phase === 'RUNNING' && !runStartTs) runStartTs = Date.now();
+    }
+    if(msg.type === 'SESSION_END'){
+      mvp = msg.mvp; canClaimGift = msg.can_claim_gift;
+      goReport();
+      renderReport();
+    }
   };
 }
 
-function onCrewUpdate(msg){
-  latestMembers = msg.members;
-  renderCrewHud(msg.members);
-  if(msg.route && JSON.stringify(msg.route) !== JSON.stringify(ROUTE_WAYPOINTS)){
-    drawRoute(msg.route, msg.route_labels || routeLabels);
-    if(routeInitialized) pushSystemMessage(`📍 Today's route: ${msg.route_labels[0]} → ${msg.route_labels[1]}`);
-    routeInitialized = true;
-  }
-  renderMapMarkers(msg.members);
-
-  msg.members.forEach(m => {
-    if(!seenMemberNames.has(m.name)){
-      seenMemberNames.add(m.name);
-      pushSystemMessage(`🎉 ${m.name} joined the crew`);
-    }
-    if(m.status === 'EMERGENCY' && lastKnownStatus[m.name] !== 'EMERGENCY'){
-      pushSystemMessage(`🆘 ${m.name} needs help!`);
-    }
-    lastKnownStatus[m.name] = m.status;
-  });
-  if(msg.phase === 'RUNNING' && !hasStarted){
-    hasStarted = true;
-    if(!runStartTs) runStartTs = Date.now();
-    pushSystemMessage('🏁 The run has started!');
-  }
-  if(msg.phase === 'VOTING' && !hasVoted){
-    document.getElementById('mainApp').style.display = 'none';
-    document.getElementById('votingArea').style.display = 'block';
-    renderVoteOptions(msg.members);
-  }
-  document.getElementById('crewCount').textContent = msg.members.filter(m => m.role !== 'host').length;
-}
-
-function castVote(targetName){
-  ws.send(JSON.stringify({ action: 'VOTE', target: targetName }));
-  hasVoted = true;
-  document.getElementById('voteOptions').style.display = 'none';
-  document.getElementById('voteStatus').style.display = 'block';
-}
-function renderVoteOptions(members){
-  document.getElementById('voteOptions').innerHTML = members.map(m => `
-    <div class="vote-option" onclick="castVote('${m.name}')"><span>${m.name}</span><span>Vote →</span></div>
-  `).join('');
-}
-
-function renderMapMarkers(members){
-  members.forEach(m => {
-    if(m.lat == null || m.lng == null) return;
-    const isMe = m.name === 'Host';
-    if(!markers[m.name]){
-      const icon = L.divIcon({
-        className: '',
-        html: `<div style="width:16px;height:16px;border-radius:50%;background:${isMe?'#E8FF00':'#F4F3EE'};border:3px solid #0B0B0A;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>`,
-        iconSize:[16,16], iconAnchor:[8,8]
-      });
-      markers[m.name] = L.marker([m.lat, m.lng], { icon }).addTo(map);
-    } else {
-      markers[m.name].setLatLng([m.lat, m.lng]);
-    }
-    if(isMe) updateRouteProgress(m.lat, m.lng);
-  });
-}
-
-function escapeHtml(s){
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
-function hashCode(s){
-  let h = 0;
-  for(let i=0;i<s.length;i++){ h = (h<<5)-h+s.charCodeAt(i); h|=0; }
-  return h;
-}
-function onChat(name, text, ts){
-  renderChat(name, text, ts);
-  if(name !== 'Host'){
-    showChatToast(name, text);
-    showChatBubbleOnMap(name, text);
-  }
-}
-function renderChat(name, text, ts){
-  const box = document.getElementById('chatBox');
-  const mine = name === 'Host';
-  const row = document.createElement('div');
-  row.className = `msg-row ${mine ? 'me' : 'other'}`;
-  const timeStr = ts ? new Date(ts * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
-  if(mine){
-    row.innerHTML = `<div class="msg-content"><div class="msg-bubble">${escapeHtml(text)}</div><div class="msg-time" style="text-align:right;">${timeStr}</div></div>`;
-  } else {
-    const hue = Math.abs(hashCode(name)) % 360;
-    row.innerHTML = `<div class="msg-avatar" style="background:hsl(${hue},55%,45%)">${escapeHtml(name.charAt(0).toUpperCase())}</div><div class="msg-content"><div class="msg-name">${escapeHtml(name)}</div><div class="msg-bubble">${escapeHtml(text)}</div><div class="msg-time">${timeStr}</div></div>`;
-  }
-  box.appendChild(row);
-  box.scrollTop = box.scrollHeight;
-}
-function pushSystemMessage(text){
-  const box = document.getElementById('chatBox');
-  const row = document.createElement('div');
-  row.className = 'msg-row system';
-  row.innerHTML = `<div class="msg-system">${text}</div>`;
-  box.appendChild(row);
-  box.scrollTop = box.scrollHeight;
-}
-function sendChatMessage(){
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if(!text) return;
-  ws.send(JSON.stringify({ action: 'CHAT', text }));
-  input.value = '';
-}
-function showChatToast(name, text){
-  const toast = document.createElement('div');
-  toast.className = 'chat-toast';
-  toast.textContent = `${name}: ${text}`;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 3500);
-}
-function showChatBubbleOnMap(name, text){
-  const marker = markers[name];
-  if(!marker) return;
-  marker.bindPopup(`<b>${escapeHtml(name)}</b><br>${escapeHtml(text)}`, { className: 'chat-bubble-popup', autoClose: true }).openPopup();
-}
-
-function setStatus(v){
-  document.querySelectorAll('#hostStatusArea .status-btn').forEach(b => b.classList.toggle('active', b.dataset.v === v));
-  ws.send(JSON.stringify({ action: 'STATUS', value: v }));
-}
-
-function startSession(){
-  ws.send(JSON.stringify({ action: 'START_SESSION' }));
-  document.getElementById('startBtn').style.display = 'none';
-  document.getElementById('endBtn').style.display = 'block';
-  document.getElementById('qrArea').style.display = 'none';
-  document.getElementById('simArea').style.display = 'none';
-  document.getElementById('hostStatusArea').style.display = 'block';
-}
-function endSession(){
-  ws.send(JSON.stringify({ action: 'END_SESSION' }));
-}
-
-async function spawnSimRunners(){
-  try {
-    const res = await fetch(`/api/spawn_sim_runners/${sessionId}`, {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ count: 4 })
-    });
-    const data = await res.json();
-    if(data.ok) pushSystemMessage(`🤖 Added test runners: ${data.spawned.join(', ')}`);
-  } catch(e) { console.log('sim spawn failed', e); }
-}
-
-function showResult(mvp, canClaimGift){
-  document.getElementById('votingArea').style.display = 'none';
+function renderReport(){
   const iWon = mvp && mvp === 'Host';
-  document.getElementById('mvpName').textContent = mvp ? (iWon ? "You're the MVP! 🎉" : `${mvp} is the MVP!`) : 'No winner';
-  document.getElementById('mvpSubtext').textContent = iWon ? 'Amazing run!' : "Great job everyone! Let's run again soon 🙌";
-
-  const giftBox = document.getElementById('giftBox');
-  if(iWon){
-    giftBox.innerHTML = `<button class="btn btn-primary" style="margin-top:16px;" onclick="openGiftModal()">🎁 Pick your gift</button>`;
-  } else {
-    giftBox.innerHTML = mvp ? `<div class="sub" style="margin-top:16px;">🎉 Congrats to ${mvp}!</div>` : '';
-  }
-
   const distMiles = totalDistanceM / 1609.34;
-  const elapsedMin = runStartTs ? (Date.now() - runStartTs) / 60000 : 0;
-  document.getElementById('finalDist').textContent = distMiles.toFixed(2);
-  document.getElementById('finalPace').textContent = (distMiles > 0.02 && elapsedMin > 0) ? formatPace(elapsedMin / distMiles) : '--';
-
-  document.getElementById('resultArea').style.display = 'block';
+  const elapsedMin = runStartTs ? (Date.now()-runStartTs)/60000 : 0;
+  document.getElementById('report-mvp-name').textContent = mvp ? (iWon ? "You're the MVP! 🎉" : `${mvp} is the MVP!`) : 'No winner';
+  const giftBox = document.getElementById('report-gift-box');
+  giftBox.innerHTML = iWon
+    ? `<button class="btn-cta-like" onclick="openGiftModal()" style="width:100%;height:52px;border:none;border-radius:6px;background:#E8FF00;color:#0B0B0A;font:600 13px/1 'Oswald',sans-serif;letter-spacing:.12em;cursor:pointer;margin-top:14px">🎁 PICK YOUR GIFT</button>`
+    : (mvp ? `<div style="margin-top:14px;font:500 13px/1.5 'Noto Sans KR',sans-serif;color:#8A8A80">🎉 Congrats to ${mvp}!</div>` : '');
+  document.getElementById('report-dist').textContent = distMiles.toFixed(2);
+  document.getElementById('report-pace').textContent = (distMiles > 0.02 && elapsedMin>0) ? formatPace(elapsedMin/distMiles) : '--';
 }
 
-async function fetchCatalogOnce(){
-  const res = await fetch('/api/gift_catalog');
-  return await res.json();
-}
-async function openGiftModal(){
-  document.getElementById('giftModal').style.display = 'flex';
-  const catalogDiv = document.getElementById('giftCatalog');
-  catalogDiv.innerHTML = '<div class="sub">Loading catalog...</div>';
-  let data;
-  try {
-    data = await fetchCatalogOnce();
-  } catch(e1) {
-    await new Promise(r => setTimeout(r, 1000));
-    try { data = await fetchCatalogOnce(); }
-    catch(e2) {
-      catalogDiv.innerHTML = `<div class="sub">Could not load catalog.</div><button class="btn btn-outline" onclick="openGiftModal()">Retry</button>`;
-      return;
-    }
-  }
-  if(!data.products || data.products.length === 0){
-    catalogDiv.innerHTML = `<div class="sub">No gifts available right now.</div><button class="btn btn-outline" onclick="openGiftModal()">Retry</button>`;
-    return;
-  }
-  catalogDiv.innerHTML = data.products.map(p => `
-    <div class="gift-item" data-id="${p.id}" onclick="selectGift(${p.id}, this)">
-      ${p.image_url ? `<img src="${p.image_url}" onerror="this.style.display='none'">` : ''}
-      <div>${escapeHtml(p.brand || p.name || 'Gift')}</div>
-      <div>${p.amount} ${p.currency || ''}</div>
-    </div>
-  `).join('');
-}
-function selectGift(id, el){
-  selectedGiftId = id;
-  document.querySelectorAll('.gift-item').forEach(x => x.classList.remove('selected'));
-  el.classList.add('selected');
-}
-function closeGiftModal(){ document.getElementById('giftModal').style.display = 'none'; }
-async function submitGiftClaim(){
-  const email = document.getElementById('giftEmail').value.trim();
-  const statusEl = document.getElementById('giftClaimStatus');
-  if(!selectedGiftId){ statusEl.textContent = 'Pick a gift first!'; return; }
-  if(!email.includes('@')){ statusEl.textContent = 'Enter a valid email.'; return; }
-  statusEl.textContent = 'Sending...';
-  try {
-    const res = await fetch('/api/claim_gift', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ product_id: selectedGiftId, email, name: 'Host' })
-    });
-    const data = await res.json();
-    statusEl.textContent = data.ok ? '✅ Sent! Check your email.' : ('❌ ' + (data.detail || 'Something went wrong') + ' — try again.');
-    if(data.ok) setTimeout(closeGiftModal, 1800);
-  } catch(e) { statusEl.textContent = '❌ Network error — try again.'; }
-}
-
-async function requestWakeLock(){
-  try { await navigator.wakeLock.request('screen'); } catch(e) { console.log('wakelock failed', e); }
-}
-function haversine(lat1, lng1, lat2, lng2){
-  const R = 6371000;
-  const toRad = d => d * Math.PI / 180;
-  const dphi = toRad(lat2 - lat1), dl = toRad(lng2 - lng1);
-  const a = Math.sin(dphi/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dl/2)**2;
-  return 2 * R * Math.asin(Math.sqrt(a));
-}
-function updateRouteProgress(lat, lng){
-  let nearestIdx = 0, nearestDist = Infinity;
-  ROUTE_WAYPOINTS.forEach((wp, i) => {
-    const d = haversine(wp[0], wp[1], lat, lng);
-    if(d < nearestDist){ nearestDist = d; nearestIdx = i; }
-  });
-  const traveled = ROUTE_WAYPOINTS.slice(0, nearestIdx + 1);
-  const remaining = ROUTE_WAYPOINTS.slice(nearestIdx);
-  if(traveledLine) map.removeLayer(traveledLine);
-  if(remainingLine) map.removeLayer(remainingLine);
-  if(traveled.length > 1) traveledLine = L.polyline(traveled, { color: '#5F5F58', weight: 3, opacity: 0.35 }).addTo(map);
-  if(remaining.length > 1) remainingLine = L.polyline(remaining, { color: '#E8FF00', weight: 7, opacity: 0.95 }).addTo(map);
+// ---------- 위치추적 ----------
+function haversine(lat1,lng1,lat2,lng2){
+  const R=6371000, toRad=d=>d*Math.PI/180;
+  const dphi=toRad(lat2-lat1), dl=toRad(lng2-lng1);
+  const a=Math.sin(dphi/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dl/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
 }
 function formatPace(minPerMile){
-  if(!isFinite(minPerMile) || minPerMile <= 0) return '--';
-  const m = Math.floor(minPerMile);
-  const sec = Math.round((minPerMile - m) * 60);
-  return `${m}'${String(sec).padStart(2,'0')}"`;
-}
-function updatePaceDisplay(lat, lng){
-  const now = Date.now();
-  if(lastFixPos && runStartTs){
-    const d = haversine(lastFixPos[0], lastFixPos[1], lat, lng);
-    if(d < 100) totalDistanceM += d;
-  }
-  lastFixPos = [lat, lng];
-  const distMiles = totalDistanceM / 1609.34;
-  document.getElementById('distValue').textContent = distMiles.toFixed(2);
-  if(runStartTs && distMiles > 0.02){
-    const elapsedMin = (now - runStartTs) / 60000;
-    document.getElementById('paceValue').textContent = formatPace(elapsedMin / distMiles);
-  }
+  if(!isFinite(minPerMile)||minPerMile<=0) return '--';
+  const m=Math.floor(minPerMile), s=Math.round((minPerMile-m)*60);
+  return `${m}'${String(s).padStart(2,'0')}"`;
 }
 function watchLocation(){
   if(!('geolocation' in navigator)) return;
-  navigator.geolocation.watchPosition((pos) => {
-    ws.send(JSON.stringify({
-      action: 'LOCATION', lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy
-    }));
-    updateRouteProgress(pos.coords.latitude, pos.coords.longitude);
-    updatePaceDisplay(pos.coords.latitude, pos.coords.longitude);
-    map.setView([pos.coords.latitude, pos.coords.longitude], following ? map.getZoom() : 16, { animate: true });
-    following = true;
-  }, (err) => console.log('location error', err), { enableHighAccuracy: true, maximumAge: 3000 });
+  navigator.geolocation.watchPosition((pos)=>{
+    const {latitude,longitude,accuracy} = pos.coords;
+    if(ws && ws.readyState===1) ws.send(JSON.stringify({action:'LOCATION', lat:latitude, lng:longitude, accuracy}));
+    if(lastFixPos){ const d=haversine(lastFixPos[0],lastFixPos[1],latitude,longitude); if(d<100) totalDistanceM+=d; }
+    lastFixPos=[latitude,longitude];
+  }, ()=>{}, { enableHighAccuracy:true, maximumAge:3000 });
+}
+
+// ---------- 기프트 ----------
+async function fetchCatalogOnce(){ const res = await fetch('/api/gift_catalog'); return await res.json(); }
+async function openGiftModal(){
+  document.getElementById('giftModal').style.display = 'flex';
+  const box = document.getElementById('giftCatalog');
+  box.innerHTML = '<div style="color:#8A8A80">Loading...</div>';
+  let data;
+  try { data = await fetchCatalogOnce(); }
+  catch(e){ box.innerHTML = '<div style="color:#8A8A80">Could not load. <button onclick="openGiftModal()">Retry</button></div>'; return; }
+  if(!data.products || data.products.length===0){
+    box.innerHTML = '<div style="color:#8A8A80">No gifts available. <button onclick="openGiftModal()">Retry</button></div>'; return;
+  }
+  box.innerHTML = data.products.map(p => `
+    <div onclick="selectGift(${p.id}, this)" style="border:1px solid rgba(244,243,238,.14);border-radius:5px;padding:10px;text-align:center;cursor:pointer;font-size:12px;background:rgba(244,243,238,.05)">
+      ${p.image_url ? `<img src="${p.image_url}" style="width:100%;height:50px;object-fit:contain" onerror="this.style.display='none'">` : ''}
+      <div style="color:#F4F3EE">${p.brand||p.name||'Gift'}</div><div style="color:#8A8A80">${p.amount} ${p.currency||''}</div>
+    </div>`).join('');
+}
+function selectGift(id, el){
+  selectedGiftId = id;
+  document.querySelectorAll('#giftCatalog > div').forEach(x=>x.style.borderColor='rgba(244,243,238,.14)');
+  el.style.borderColor = '#E8FF00';
+}
+function closeGiftModal(){ document.getElementById('giftModal').style.display='none'; }
+async function submitGiftClaim(){
+  const email = document.getElementById('giftEmail').value.trim();
+  const statusEl = document.getElementById('giftClaimStatus');
+  if(!selectedGiftId){ statusEl.textContent='Pick a gift first!'; return; }
+  if(!email.includes('@')){ statusEl.textContent='Enter a valid email.'; return; }
+  statusEl.textContent = 'Sending...';
+  try {
+    const res = await fetch('/api/claim_gift', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ product_id: selectedGiftId, email, name:'Host' }) });
+    const data = await res.json();
+    statusEl.textContent = data.ok ? '✅ Sent!' : ('❌ ' + (data.detail || 'Failed'));
+  } catch(e){ statusEl.textContent = '❌ Network error'; }
 }
 
 init();
 </script>
-</body>
-</html>
+</div></body></html>

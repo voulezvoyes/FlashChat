@@ -244,6 +244,7 @@ input[type=text]:focus { outline: 1px solid var(--accent); outline-offset: 1px; 
   letter-spacing: 0.04em; cursor: pointer;
 }
 .chip:active { background: var(--accent-soft); border-color: var(--accent); }
+.pill-toggle { transition: background .15s, color .15s, border-color .15s; }
 #routeGate { background: var(--bg); min-height: 100dvh; }
 
 .center-text { text-align: center; }
