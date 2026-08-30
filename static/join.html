@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Join - FlashChat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Archivo:wght@600;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>🙌 Join the Crew</h1>
+  <div class="sub">Session code: <b id="sessionLabel">-</b></div>
+
+  <input type="text" id="nameInput" placeholder="Nickname (e.g. Tiger77)" maxlength="12">
+  <button class="btn btn-outline" onclick="randomName()">🎲 Random Nickname</button>
+  <button class="btn btn-primary" onclick="enter()">Enter</button>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+const session = (params.get('session') || '').toUpperCase();
+document.getElementById('sessionLabel').textContent = session || '(none)';
+
+async function randomName(){
+  const res = await fetch('/api/random_nickname');
+  const data = await res.json();
+  document.getElementById('nameInput').value = data.nickname;
+}
+function enter(){
+  if(!session){ alert('No session code found. Please scan the QR code again.'); return; }
+  const name = document.getElementById('nameInput').value.trim();
+  if(!name){ alert('Please enter a nickname'); return; }
+  location.href = `member.html?session=${session}&name=${encodeURIComponent(name)}`;
+}
+</script>
+</body>
+</html>

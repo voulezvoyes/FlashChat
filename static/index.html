@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FlashChat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Archivo:wght@600;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <h1>⚡ FlashChat</h1>
+  <div class="sub">No app install — one-time safety monitoring, just for this crew.</div>
+
+  <button class="btn btn-primary" onclick="location.href='host.html'">👑 Start as Crew Leader</button>
+
+  <div class="sub" style="margin-top:24px;">If you scanned a QR code, you're already in.<br>For testing, enter a session code manually ↓</div>
+  <input type="text" id="codeInput" placeholder="6-digit session code (e.g. AB12CD)">
+  <button class="btn btn-outline" onclick="joinByCode()">Join with Code</button>
+</div>
+<script>
+function joinByCode(){
+  const code = document.getElementById('codeInput').value.trim().toUpperCase();
+  if(!code){ alert('Please enter a session code'); return; }
+  location.href = `join.html?session=${code}`;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+/* ============================================================
+   FlashChat — design tokens
+   Theme: dark canvas + neon yellow-green accent, Oswald/Archivo
+   headers, Noto Sans KR body. (재스킨: 클래스명은 그대로 두고
+   값만 새 팀원 디자인 톤으로 교체함 — 로직/구조는 안 건드림)
+   ============================================================ */
+:root {
+  --bg: #0B0B0A;
+  --surface: #16160f;
+  --surface-2: rgba(244, 243, 238, 0.07);
+  --border: rgba(244, 243, 238, 0.14);
+  --text: #F4F3EE;
+  --text-muted: #8A8A80;
+  --text-muted-2: #5F5F58;
+  --accent: #E8FF00;
+  --accent-on: #0B0B0A; /* 네온 배경 위에 올라가는 진한 텍스트 색 */
+  --accent-soft: rgba(232, 255, 0, 0.12);
+  --band: #000000;
+  --band-text: #F4F3EE;
+  --green: #4ADE80;
+  --amber: #C9D400;
+  --red: #FF3B3B;
+  --radius-sm: 5px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --font-display: 'Oswald', 'Noto Sans KR', sans-serif;
+  --font-body: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Archivo', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+h1 {
+  font-family: var(--font-display); font-size: 24px; font-weight: 600; margin: 0 0 4px;
+  letter-spacing: 0.02em; text-transform: uppercase; line-height: 1.15;
+}
+.sub { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+
+.wrap { max-width: 480px; margin: 0 auto; padding: 24px 16px 100px; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: block; width: 100%; padding: 18px;
+  font-family: var(--font-display); font-size: 14px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  border: none; border-radius: var(--radius-md); margin-bottom: 12px;
+  cursor: pointer; transition: transform .08s ease;
+}
+.btn-primary { background: var(--accent); color: var(--accent-on); }
+.btn-danger  { background: var(--red); color: white; }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn:active { transform: translateY(2px); }
+
+input[type=text] {
+  width: 100%; padding: 15px 16px; font-size: 15px; font-family: var(--font-body);
+  border-radius: var(--radius-md); border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text); margin-bottom: 12px;
+}
+input[type=text]::placeholder { color: var(--text-muted-2); }
+input[type=text]:focus { outline: 1px solid var(--accent); outline-offset: 1px; }
+
+/* ---------- Navbar & Tabs ---------- */
+.navbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--band); color: var(--band-text); padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.navbar .brand {
+  font-family: var(--font-display); font-weight: 600; font-size: 15px;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--band-text);
+}
+.navbar .role-badge {
+  font-family: var(--font-display); font-size: 9.5px; font-weight: 600; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--accent-on);
+  background: var(--accent); border-radius: 3px; padding: 4px 8px;
+}
+.tabbar {
+  position: sticky; top: 49px; z-index: 49;
+  display: flex; background: var(--band);
+  border-bottom: 1px solid var(--border);
+}
+.tab-btn {
+  flex: 1; text-align: center; padding: 12px 4px;
+  font-family: var(--font-display); font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--text-muted-2); background: none; border: none;
+  border-bottom: 2px solid transparent; cursor: pointer; margin-bottom: -1px;
+}
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.tab-panel { display: none; max-width: 480px; margin: 0 auto; padding: 16px; }
+.tab-panel.active { display: block; }
+
+.tab-panel.map-panel { display: none; max-width: none; margin: 0; padding: 0; position: relative; }
+.tab-panel.map-panel.active { display: block; }
+#map.fullbleed { width: 100%; height: calc(100dvh - 96px); border-radius: 0; isolation: isolate; }
+
+/* 다크모드 지도 — 기본 OSM(밝은) 타일을 invert+hue-rotate로 어둡게 뒤집음 */
+.leaflet-container { background: #0B0B0A; }
+.leaflet-tile-pane { filter: invert(0.92) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.4); }
+.leaflet-control-attribution { background: rgba(0,0,0,.5) !important; color: var(--text-muted-2) !important; }
+.leaflet-control-attribution a { color: var(--text-muted) !important; }
+
+.leaflet-control-zoom { border: none !important; box-shadow: none !important; }
+.leaflet-control-zoom a {
+  background: var(--surface) !important; border: 1px solid var(--border) !important;
+  color: var(--accent) !important; border-radius: var(--radius-sm) !important;
+  width: 34px !important; height: 34px !important; line-height: 34px !important;
+  font-weight: 700 !important; margin-bottom: 4px !important;
+}
+.leaflet-control-zoom a:hover { background: var(--accent-soft) !important; }
+
+/* 브랜드 랜드마크 마커 */
+.brand-marker { display: flex; flex-direction: column; align-items: center; }
+.brand-marker-pill {
+  font-family: var(--font-display); background: var(--accent); color: var(--accent-on);
+  font-size: 9.5px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 3px; white-space: nowrap; margin-bottom: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.brand-marker-dot {
+  width: 14px; height: 14px; border-radius: 50%; background: var(--accent);
+  border: 3px solid #0B0B0A; box-shadow: 0 0 0 1.5px var(--accent);
+}
+
+/* ---------- Crew HUD ---------- */
+.crew-hud {
+  position: absolute; left: 12px; bottom: 16px; z-index: 1000;
+  background: rgba(11,11,10,0.9); border: 1px solid var(--border); color: var(--text);
+  border-radius: var(--radius-md); padding: 10px 12px; max-width: 190px;
+  backdrop-filter: blur(4px); font-size: 12px;
+}
+.crew-hud .hud-title {
+  font-family: var(--font-display); font-weight: 600; font-size: 9.5px; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--text-muted); margin-bottom: 6px;
+}
+.hud-member { display: flex; align-items: center; gap: 7px; padding: 3px 0; }
+.status-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.dot-green { background: var(--green); }
+.dot-amber { background: var(--amber); }
+.dot-red { background: var(--red); }
+.dot-grey { background: var(--text-muted-2); }
+
+/* ---------- Chat toast ---------- */
+.chat-toast {
+  position: fixed; top: 106px; left: 50%; transform: translateX(-50%);
+  background: var(--surface); border: 1px solid var(--border); border-radius: 999px;
+  padding: 10px 18px; font-size: 13px; color: var(--text); z-index: 80;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  max-width: 88%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.chat-bubble-popup .leaflet-popup-content-wrapper { background: var(--surface); color: var(--text); border-radius: var(--radius-sm); }
+.chat-bubble-popup .leaflet-popup-tip { background: var(--surface); }
+
+/* ---------- Shared "panel" look ---------- */
+.chat-box, .stat-card, .vote-option {
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+}
+/* QR은 스캔 가능하게 항상 밝은 카드 위에 있어야 함 (다크 배경 예외) */
+.qr-box { padding: 18px; display: flex; justify-content: center; margin-bottom: 16px; background: #F4F3EE; border-radius: var(--radius-lg); }
+
+/* ---------- Chat bubbles ---------- */
+.chat-box { height: min(55vh, 420px); padding: 12px; overflow-y: auto; margin-bottom: 10px; }
+.msg-row { display: flex; margin-bottom: 8px; gap: 8px; }
+.msg-row.me { justify-content: flex-end; }
+.msg-row.other { align-items: flex-end; }
+.msg-row.me .msg-bubble { background: var(--accent); color: var(--accent-on); border-bottom-right-radius: 4px; }
+.msg-row.other .msg-bubble { background: var(--surface-2); color: var(--text); border-bottom-left-radius: 4px; }
+.msg-avatar {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #0B0B0A;
+}
+.msg-time { font-size: 10px; color: var(--text-muted-2); margin-top: 3px; }
+.msg-name { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+.msg-content { max-width: 75%; width: max-content; }
+.msg-bubble { max-width: 100%; padding: 9px 13px; border-radius: 14px; font-size: 14px; overflow-wrap: break-word; word-break: keep-all; white-space: pre-wrap; }
+.msg-row.system { justify-content: center; margin: 8px 0; }
+.msg-system {
+  background: var(--accent-soft); color: var(--amber); font-family: var(--font-display);
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em;
+  padding: 5px 12px; border-radius: 999px;
+}
+.chat-input-row { display: flex; gap: 8px; }
+.chat-input-row input[type=text] { flex: 1; margin-bottom: 0; }
+.chat-send-btn {
+  width: 46px; height: 46px; border-radius: var(--radius-md); border: none;
+  background: var(--accent); color: var(--accent-on); font-size: 18px; cursor: pointer; flex-shrink: 0;
+}
+
+/* ---------- Status buttons ---------- */
+.status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.status-btn {
+  padding: 18px 8px; border-radius: var(--radius-md); border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text); font-size: 13px; font-weight: 600;
+  text-align: center; cursor: pointer;
+}
+.status-btn.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.status-btn.sos { border-color: var(--red); color: var(--red); grid-column: span 2; }
+.status-btn.sos.active { background: rgba(255,59,59,0.14); }
+
+/* ---------- Stat cards (digital readout) ---------- */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.stat-card { padding: 16px; text-align: center; }
+.stat-value { font-family: var(--font-mono); font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent); }
+.stat-label {
+  font-family: var(--font-display); font-size: 9.5px; color: var(--text-muted); margin-top: 5px;
+  text-transform: uppercase; letter-spacing: 0.14em;
+}
+
+/* ---------- Voting screen ---------- */
+.vote-option { display: flex; justify-content: space-between; align-items: center; padding: 16px; margin-bottom: 10px; cursor: pointer; }
+.vote-option.voted { border-color: var(--accent); background: var(--accent-soft); }
+
+/* ---------- Pills ---------- */
+.pill { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.pill-normal { background: rgba(74,222,128,.14); color: var(--green); }
+.pill-lagging { background: rgba(201,212,0,.16); color: var(--amber); }
+.pill-stuck { background: rgba(255,59,59,.16); color: var(--red); }
+.pill-emergency { background: var(--red); color: white; }
+.member-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 4px; border-bottom: 1px solid var(--border); }
+
+/* ---------- Gift claim modal ---------- */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 90; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.modal-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; max-width: 420px; width: 100%; max-height: 80vh; overflow-y: auto; }
+.gift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+.gift-item { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; text-align: center; cursor: pointer; font-size: 12px; background: var(--surface-2); }
+.gift-item.selected { border-color: var(--accent); background: var(--accent-soft); }
+.gift-item img { width: 100%; height: 50px; object-fit: contain; margin-bottom: 4px; }
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 12px; }
+.chip {
+  font-family: var(--font-display); background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text); border-radius: 999px; padding: 6px 11px; font-size: 11px;
+  letter-spacing: 0.04em; cursor: pointer;
+}
+.chip:active { background: var(--accent-soft); border-color: var(--accent); }
+#routeGate { background: var(--bg); min-height: 100dvh; }
+
+.center-text { text-align: center; }
+.big-emoji { font-size: 48px; margin-bottom: 8px; }

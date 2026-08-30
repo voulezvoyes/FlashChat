@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FlashChat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Archivo:wght@600;700;800&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="brand">⚡ FlashChat</div>
+  <div class="role-badge" id="myNameBadge">-</div>
+</div>
+
+<div class="tabbar">
+  <button class="tab-btn active" data-tab="map" onclick="switchTab('map')">🗺️ Map</button>
+  <button class="tab-btn" data-tab="chat" onclick="switchTab('chat')">💬 Chat</button>
+  <button class="tab-btn" data-tab="status" onclick="switchTab('status')">📊 Status</button>
+</div>
+
+<div class="tab-panel map-panel active" id="panel-map">
+  <div id="waitingNotice" class="wrap center-text">
+    <div class="big-emoji">⏳</div>
+    <h1>Waiting for the host to start...</h1>
+    <div class="sub">The map will appear once the run begins.</div>
+  </div>
+  <div id="map" class="fullbleed" style="display:none;"></div>
+  <div class="crew-hud" id="crewHud" style="display:none;">
+    <div class="hud-title">Crew</div>
+    <div id="crewHudList"></div>
+  </div>
+</div>
+
+<div class="tab-panel" id="panel-chat">
+  <div class="chat-box" id="chatBox"></div>
+  <div class="chat-input-row">
+    <input type="text" id="chatInput" placeholder="Type a message...">
+    <button class="chat-send-btn" onclick="sendChatMessage()">➤</button>
+  </div>
+</div>
+
+<div class="tab-panel" id="panel-status">
+  <div id="statusArea" style="display:none;">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-value" id="paceValue">--</div><div class="stat-label">Pace / mi</div></div>
+      <div class="stat-card"><div class="stat-value" id="distValue">0.00</div><div class="stat-label">Distance mi</div></div>
+    </div>
+    <div class="status-grid">
+      <div class="status-btn active" data-v="OK" onclick="setStatus('OK')">✅ I'm OK</div>
+      <div class="status-btn" data-v="WATER_BREAK" onclick="setStatus('WATER_BREAK')">💧 Water Break</div>
+      <div class="status-btn" data-v="REST" onclick="setStatus('REST')">🧍 Rest Request</div>
+      <div class="status-btn" data-v="HOME" onclick="setStatus('HOME')">🏠 Heading Home</div>
+      <div class="status-btn sos" data-v="EMERGENCY" onclick="setStatus('EMERGENCY')">🆘 Emergency Help (SOS)</div>
+    </div>
+  </div>
+  <div id="statusWaiting" class="sub">Status buttons appear once the run starts.</div>
+</div>
+
+<div id="votingArea" style="display:none">
+  <div class="wrap center-text">
+    <div class="big-emoji">🎉</div>
+    <h1>Great run!</h1>
+    <div class="sub">Nominate today's MVP crew member</div>
+    <div id="voteOptions" style="text-align:left; margin-top: 20px;"></div>
+    <div id="voteStatus" class="sub" style="display:none">✅ Vote submitted — waiting for the rest of the crew...</div>
+  </div>
+</div>
+
+<div id="resultArea" style="display:none" class="center-text">
+  <div class="wrap">
+    <div class="big-emoji">🏆</div>
+    <h1 id="mvpName">-</h1>
+    <div class="sub" id="mvpSubtext">Great job! Let's run again soon 🙌</div>
+    <div class="stat-grid" style="margin-top:6px;">
+      <div class="stat-card"><div class="stat-value" id="finalPace">--</div><div class="stat-label">Pace / mi</div></div>
+      <div class="stat-card"><div class="stat-value" id="finalDist">0.00</div><div class="stat-label">Miles run</div></div>
+    </div>
+    <div id="giftBox"></div>
+    <div id="interestArea" style="margin-top:24px;">
+      <div class="sub">📈 Want to track your total miles &amp; streaks across runs?</div>
+      <input type="text" id="interestEmail" placeholder="you@email.com">
+      <button class="btn btn-outline" onclick="submitInterest()">Notify me when it launches</button>
+    </div>
+  </div>
+</div>
+
+<div id="giftModal" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+    <h3 style="margin-top:0;">🎁 Pick your gift</h3>
+    <div id="giftCatalog" class="gift-grid"><div class="sub">Loading catalog...</div></div>
+    <input type="text" id="giftEmail" placeholder="you@email.com" style="margin-top:8px;">
+    <button class="btn btn-primary" onclick="submitGiftClaim()">Send my gift</button>
+    <button class="btn btn-outline" onclick="closeGiftModal()">Cancel</button>
+    <div class="sub" id="giftClaimStatus"></div>
+  </div>
+</div>
+
+<script>
+let ROUTE_WAYPOINTS = [[34.0224, -118.2851], [34.1341, -118.3215]];
+let routeLabels = ['USC', 'Hollywood Sign'];
+let landmarkMarkers = [];
+let routeInitialized = false;
+
+const params = new URLSearchParams(location.search);
+const sessionId = (params.get('session') || '').toUpperCase();
+const myName = params.get('name') || 'Runner';
+
+let ws, map, markers = {}, latestMembers = [];
+let traveledLine = null, remainingLine = null;
+let seenMemberNames = new Set(), hasStarted = false, lastKnownStatus = {};
+let hasVoted = false, following = false;
+let runStartTs = null, lastFixPos = null, totalDistanceM = 0;
+let selectedGiftId = null;
+
+document.getElementById('myNameBadge').textContent = myName;
+
+function brandMarkerIcon(label){
+  return L.divIcon({
+    className: 'brand-marker',
+    html: `<div class="brand-marker-pill">${label}</div><div class="brand-marker-dot"></div>`,
+    iconSize: [90, 46],
+    iconAnchor: [45, 40]
+  });
+}
+function drawRoute(waypoints, labels){
+  ROUTE_WAYPOINTS = waypoints;
+  routeLabels = labels;
+  landmarkMarkers.forEach(m => map.removeLayer(m));
+  landmarkMarkers = [];
+  if(remainingLine) map.removeLayer(remainingLine);
+  if(traveledLine) map.removeLayer(traveledLine);
+  landmarkMarkers.push(L.marker(waypoints[0], { icon: brandMarkerIcon(labels[0]) }).addTo(map));
+  landmarkMarkers.push(L.marker(waypoints[waypoints.length-1], { icon: brandMarkerIcon(labels[labels.length-1]) }).addTo(map));
+  remainingLine = L.polyline(waypoints, { color: '#E8FF00', weight: 7, opacity: 0.95 }).addTo(map);
+  map.fitBounds(waypoints, { padding: [30, 30] });
+}
+
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `panel-${name}`));
+  if(name === 'map' && map) setTimeout(() => map.invalidateSize(), 50);
+}
+function statusColorClass(m){
+  if(m.status === 'STUCK' || m.status === 'EMERGENCY') return 'dot-red';
+  if(m.status === 'LAGGING' || m.self_status === 'WATER_BREAK' || m.self_status === 'REST') return 'dot-amber';
+  if(m.self_status === 'HOME') return 'dot-grey';
+  return 'dot-green';
+}
+function selfStatusEmoji(s){
+  return { WATER_BREAK: ' 💧', REST: ' 🧍', HOME: ' 🏠' }[s] || '';
+}
+function renderCrewHud(members){
+  document.getElementById('crewHudList').innerHTML = members.map(m => `
+    <div class="hud-member">
+      <span class="status-dot ${statusColorClass(m)}"></span>
+      <span>${m.name}${selfStatusEmoji(m.self_status)} ${m.role==='host' ? '👑' : ''}${m.sim ? ' 🤖' : ''}</span>
+    </div>`).join('');
+}
+
+function connectWS(){
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}/ws/${sessionId}?name=${encodeURIComponent(myName)}&role=member`);
+  ws.onmessage = (ev) => {
+    const msg = JSON.parse(ev.data);
+    if(msg.type === 'CREW_UPDATE') onCrewUpdate(msg);
+    if(msg.type === 'CHAT') onChat(msg.name, msg.text, msg.ts);
+    if(msg.type === 'SESSION_END') showResult(msg.mvp, msg.can_claim_gift);
+  };
+}
+
+function onCrewUpdate(msg){
+  latestMembers = msg.members;
+  renderCrewHud(msg.members);
+
+  if(msg.route && JSON.stringify(msg.route) !== JSON.stringify(ROUTE_WAYPOINTS)){
+    drawRoute(msg.route, msg.route_labels || routeLabels);
+    if(routeInitialized) pushSystemMessage(`📍 Today's route: ${msg.route_labels[0]} → ${msg.route_labels[1]}`);
+    routeInitialized = true;
+  }
+  renderMapMarkers(msg.members);
+
+  msg.members.forEach(m => {
+    if(!seenMemberNames.has(m.name)){
+      seenMemberNames.add(m.name);
+      pushSystemMessage(`🎉 ${m.name} joined the crew`);
+    }
+    if(m.status === 'EMERGENCY' && lastKnownStatus[m.name] !== 'EMERGENCY'){
+      pushSystemMessage(`🆘 ${m.name} needs help!`);
+    }
+    lastKnownStatus[m.name] = m.status;
+  });
+
+  if(msg.phase === 'RUNNING'){
+    document.getElementById('waitingNotice').style.display = 'none';
+    document.getElementById('map').style.display = 'block';
+    document.getElementById('crewHud').style.display = 'block';
+    document.getElementById('statusArea').style.display = 'block';
+    document.getElementById('statusWaiting').style.display = 'none';
+    if(!map) initMap();
+    if(!hasStarted){
+      hasStarted = true;
+      if(!runStartTs) runStartTs = Date.now();
+      watchLocation();
+      requestWakeLock();
+    }
+  }
+  if(msg.phase === 'VOTING' && !hasVoted){
+    document.getElementById('votingArea').style.display = 'block';
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    document.querySelector('.navbar').style.display = 'none';
+    document.querySelector('.tabbar').style.display = 'none';
+    renderVoteOptions(msg.members);
+  }
+}
+
+function castVote(targetName){
+  ws.send(JSON.stringify({ action: 'VOTE', target: targetName }));
+  hasVoted = true;
+  document.getElementById('voteOptions').style.display = 'none';
+  document.getElementById('voteStatus').style.display = 'block';
+}
+function renderVoteOptions(members){
+  document.getElementById('voteOptions').innerHTML = members.map(m => `
+    <div class="vote-option" onclick="castVote('${m.name}')"><span>${m.name}</span><span>Vote →</span></div>
+  `).join('');
+}
+
+function initMap(){
+  map = L.map('map');
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+  drawRoute(ROUTE_WAYPOINTS, routeLabels);
+  routeInitialized = true;
+}
+
+function renderMapMarkers(members){
+  if(!map) return;
+  members.forEach(m => {
+    if(m.lat == null || m.lng == null) return;
+    const isMe = m.name === myName;
+    if(!markers[m.name]){
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="width:16px;height:16px;border-radius:50%;background:${isMe?'#E8FF00':'#F4F3EE'};border:3px solid #0B0B0A;box-shadow:0 2px 6px rgba(0,0,0,.5)"></div>`,
+        iconSize:[16,16], iconAnchor:[8,8]
+      });
+      markers[m.name] = L.marker([m.lat, m.lng], { icon }).addTo(map);
+    } else {
+      markers[m.name].setLatLng([m.lat, m.lng]);
+    }
+    if(isMe) updateRouteProgress(m.lat, m.lng);
+  });
+}
+
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+function hashCode(s){
+  let h = 0;
+  for(let i=0;i<s.length;i++){ h = (h<<5)-h+s.charCodeAt(i); h|=0; }
+  return h;
+}
+function onChat(name, text, ts){
+  renderChat(name, text, ts);
+  if(name !== myName){
+    showChatToast(name, text);
+    showChatBubbleOnMap(name, text);
+  }
+}
+function renderChat(name, text, ts){
+  const box = document.getElementById('chatBox');
+  const mine = name === myName;
+  const row = document.createElement('div');
+  row.className = `msg-row ${mine ? 'me' : 'other'}`;
+  const timeStr = ts ? new Date(ts * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+  if(mine){
+    row.innerHTML = `<div class="msg-content"><div class="msg-bubble">${escapeHtml(text)}</div><div class="msg-time" style="text-align:right;">${timeStr}</div></div>`;
+  } else {
+    const hue = Math.abs(hashCode(name)) % 360;
+    row.innerHTML = `<div class="msg-avatar" style="background:hsl(${hue},55%,45%)">${escapeHtml(name.charAt(0).toUpperCase())}</div><div class="msg-content"><div class="msg-name">${escapeHtml(name)}</div><div class="msg-bubble">${escapeHtml(text)}</div><div class="msg-time">${timeStr}</div></div>`;
+  }
+  box.appendChild(row);
+  box.scrollTop = box.scrollHeight;
+}
+function pushSystemMessage(text){
+  const box = document.getElementById('chatBox');
+  const row = document.createElement('div');
+  row.className = 'msg-row system';
+  row.innerHTML = `<div class="msg-system">${text}</div>`;
+  box.appendChild(row);
+  box.scrollTop = box.scrollHeight;
+}
+function sendChatMessage(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  ws.send(JSON.stringify({ action: 'CHAT', text }));
+  input.value = '';
+}
+function showChatToast(name, text){
+  const toast = document.createElement('div');
+  toast.className = 'chat-toast';
+  toast.textContent = `${name}: ${text}`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+function showChatBubbleOnMap(name, text){
+  const marker = markers[name];
+  if(!marker) return;
+  marker.bindPopup(`<b>${escapeHtml(name)}</b><br>${escapeHtml(text)}`, { className: 'chat-bubble-popup', autoClose: true }).openPopup();
+}
+
+function setStatus(v){
+  document.querySelectorAll('#panel-status .status-btn').forEach(b => b.classList.toggle('active', b.dataset.v === v));
+  ws.send(JSON.stringify({ action: 'STATUS', value: v }));
+}
+
+function showResult(mvp, canClaimGift){
+  document.getElementById('votingArea').style.display = 'none';
+  const iWon = mvp && mvp === myName;
+  document.getElementById('mvpName').textContent = mvp ? (iWon ? "You're the MVP! 🎉" : `${mvp} is the MVP!`) : 'No winner';
+  document.getElementById('mvpSubtext').textContent = iWon ? 'Amazing run!' : "Great job everyone! Let's run again soon 🙌";
+
+  const giftBox = document.getElementById('giftBox');
+  if(iWon){
+    giftBox.innerHTML = `<button class="btn btn-primary" style="margin-top:16px;" onclick="openGiftModal()">🎁 Pick your gift</button>`;
+  } else {
+    giftBox.innerHTML = mvp ? `<div class="sub" style="margin-top:16px;">🎉 Congrats to ${mvp}!</div>` : '';
+  }
+
+  const distMiles = totalDistanceM / 1609.34;
+  const elapsedMin = runStartTs ? (Date.now() - runStartTs) / 60000 : 0;
+  document.getElementById('finalDist').textContent = distMiles.toFixed(2);
+  document.getElementById('finalPace').textContent = (distMiles > 0.02 && elapsedMin > 0) ? formatPace(elapsedMin / distMiles) : '--';
+
+  document.getElementById('resultArea').style.display = 'block';
+}
+
+async function submitInterest(){
+  const emailInput = document.getElementById('interestEmail');
+  const email = emailInput.value.trim();
+  if(!email.includes('@')){ alert('Please enter a valid email'); return; }
+  try {
+    await fetch('/api/interest', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email })
+    });
+  } catch(e) { console.log('interest submit failed', e); }
+  document.getElementById('interestArea').innerHTML = `<div class="sub">✅ Thanks! We'll email you when full tracking launches.</div>`;
+}
+
+async function fetchCatalogOnce(){
+  const res = await fetch('/api/gift_catalog');
+  return await res.json();
+}
+async function openGiftModal(){
+  document.getElementById('giftModal').style.display = 'flex';
+  const catalogDiv = document.getElementById('giftCatalog');
+  catalogDiv.innerHTML = '<div class="sub">Loading catalog...</div>';
+  let data;
+  try {
+    data = await fetchCatalogOnce();
+  } catch(e1) {
+    await new Promise(r => setTimeout(r, 1000));
+    try { data = await fetchCatalogOnce(); }
+    catch(e2) {
+      catalogDiv.innerHTML = `<div class="sub">Could not load catalog.</div><button class="btn btn-outline" onclick="openGiftModal()">Retry</button>`;
+      return;
+    }
+  }
+  if(!data.products || data.products.length === 0){
+    catalogDiv.innerHTML = `<div class="sub">No gifts available right now.</div><button class="btn btn-outline" onclick="openGiftModal()">Retry</button>`;
+    return;
+  }
+  catalogDiv.innerHTML = data.products.map(p => `
+    <div class="gift-item" data-id="${p.id}" onclick="selectGift(${p.id}, this)">
+      ${p.image_url ? `<img src="${p.image_url}" onerror="this.style.display='none'">` : ''}
+      <div>${escapeHtml(p.brand || p.name || 'Gift')}</div>
+      <div>${p.amount} ${p.currency || ''}</div>
+    </div>
+  `).join('');
+}
+function selectGift(id, el){
+  selectedGiftId = id;
+  document.querySelectorAll('.gift-item').forEach(x => x.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function closeGiftModal(){ document.getElementById('giftModal').style.display = 'none'; }
+async function submitGiftClaim(){
+  const email = document.getElementById('giftEmail').value.trim();
+  const statusEl = document.getElementById('giftClaimStatus');
+  if(!selectedGiftId){ statusEl.textContent = 'Pick a gift first!'; return; }
+  if(!email.includes('@')){ statusEl.textContent = 'Enter a valid email.'; return; }
+  statusEl.textContent = 'Sending...';
+  try {
+    const res = await fetch('/api/claim_gift', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: selectedGiftId, email, name: myName })
+    });
+    const data = await res.json();
+    statusEl.textContent = data.ok ? '✅ Sent! Check your email.' : ('❌ ' + (data.detail || 'Something went wrong') + ' — try again.');
+    if(data.ok) setTimeout(closeGiftModal, 1800);
+  } catch(e) { statusEl.textContent = '❌ Network error — try again.'; }
+}
+
+async function requestWakeLock(){
+  try { await navigator.wakeLock.request('screen'); } catch(e) { console.log('wakelock failed', e); }
+}
+function haversine(lat1, lng1, lat2, lng2){
+  const R = 6371000;
+  const toRad = d => d * Math.PI / 180;
+  const dphi = toRad(lat2 - lat1), dl = toRad(lng2 - lng1);
+  const a = Math.sin(dphi/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dl/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+function updateRouteProgress(lat, lng){
+  let nearestIdx = 0, nearestDist = Infinity;
+  ROUTE_WAYPOINTS.forEach((wp, i) => {
+    const d = haversine(wp[0], wp[1], lat, lng);
+    if(d < nearestDist){ nearestDist = d; nearestIdx = i; }
+  });
+  const traveled = ROUTE_WAYPOINTS.slice(0, nearestIdx + 1);
+  const remaining = ROUTE_WAYPOINTS.slice(nearestIdx);
+  if(traveledLine) map.removeLayer(traveledLine);
+  if(remainingLine) map.removeLayer(remainingLine);
+  if(traveled.length > 1) traveledLine = L.polyline(traveled, { color: '#5F5F58', weight: 3, opacity: 0.35 }).addTo(map);
+  if(remaining.length > 1) remainingLine = L.polyline(remaining, { color: '#E8FF00', weight: 7, opacity: 0.95 }).addTo(map);
+}
+function formatPace(minPerMile){
+  if(!isFinite(minPerMile) || minPerMile <= 0) return '--';
+  const m = Math.floor(minPerMile);
+  const sec = Math.round((minPerMile - m) * 60);
+  return `${m}'${String(sec).padStart(2,'0')}"`;
+}
+function updatePaceDisplay(lat, lng){
+  const now = Date.now();
+  if(lastFixPos && runStartTs){
+    const d = haversine(lastFixPos[0], lastFixPos[1], lat, lng);
+    if(d < 100) totalDistanceM += d;
+  }
+  lastFixPos = [lat, lng];
+  const distMiles = totalDistanceM / 1609.34;
+  document.getElementById('distValue').textContent = distMiles.toFixed(2);
+  if(runStartTs && distMiles > 0.02){
+    const elapsedMin = (now - runStartTs) / 60000;
+    document.getElementById('paceValue').textContent = formatPace(elapsedMin / distMiles);
+  }
+}
+function watchLocation(){
+  if(!('geolocation' in navigator)) return;
+  navigator.geolocation.watchPosition((pos) => {
+    ws.send(JSON.stringify({
+      action: 'LOCATION', lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: pos.coords.accuracy
+    }));
+    updateRouteProgress(pos.coords.latitude, pos.coords.longitude);
+    updatePaceDisplay(pos.coords.latitude, pos.coords.longitude);
+    map.setView([pos.coords.latitude, pos.coords.longitude], following ? map.getZoom() : 16, { animate: true });
+    following = true;
+  }, (err) => console.log('location error', err), { enableHighAccuracy: true, maximumAge: 3000 });
+}
+
+document.getElementById('chatInput').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') sendChatMessage();
+});
+connectWS();
+</script>
+</body>
+</html>
